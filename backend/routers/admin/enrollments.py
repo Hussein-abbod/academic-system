@@ -12,12 +12,20 @@ router = APIRouter(prefix="/admin/enrollments", tags=["Admin - Enrollments"])
 @router.post("", response_model=EnrollmentResponse, dependencies=[Depends(require_admin)])
 async def create_enrollment(enrollment_data: EnrollmentCreate, db: Session = Depends(get_db)):
     """Enroll a student in a course"""
-    new_enrollment = Enrollment(**enrollment_data.dict())
+    new_enrollment = Enrollment(**enrollment_data.model_dump())
     db.add(new_enrollment)
     db.commit()
     db.refresh(new_enrollment)
     
-    return EnrollmentResponse.from_orm(new_enrollment)
+    # Convert to dict and serialize datetime
+    return {
+        "id": str(new_enrollment.id),
+        "student_id": new_enrollment.student_id,
+        "course_id": new_enrollment.course_id,
+        "enrollment_date": new_enrollment.enrollment_date.isoformat(),
+        "status": new_enrollment.status.value,
+        "current_progress": float(new_enrollment.current_progress)
+    }
 
 
 @router.get("", response_model=List[EnrollmentResponse], dependencies=[Depends(require_admin)])
@@ -40,7 +48,17 @@ async def list_enrollments(
         query = query.filter(Enrollment.status == status)
     
     enrollments = query.offset(skip).limit(limit).all()
-    return [EnrollmentResponse.from_orm(enrollment) for enrollment in enrollments]
+    return [
+        {
+            "id": str(e.id),
+            "student_id": e.student_id,
+            "course_id": e.course_id,
+            "enrollment_date": e.enrollment_date.isoformat(),
+            "status": e.status.value,
+            "current_progress": float(e.current_progress)
+        }
+        for e in enrollments
+    ]
 
 
 @router.get("/{enrollment_id}", response_model=EnrollmentResponse, dependencies=[Depends(require_admin)])
@@ -73,7 +91,14 @@ async def update_enrollment(enrollment_id: str, enrollment_data: EnrollmentUpdat
     db.commit()
     db.refresh(enrollment)
     
-    return EnrollmentResponse.from_orm(enrollment)
+    return {
+        "id": str(enrollment.id),
+        "student_id": enrollment.student_id,
+        "course_id": enrollment.course_id,
+        "enrollment_date": enrollment.enrollment_date.isoformat(),
+        "status": enrollment.status.value,
+        "current_progress": float(enrollment.current_progress)
+    }
 
 
 @router.delete("/{enrollment_id}", dependencies=[Depends(require_admin)])

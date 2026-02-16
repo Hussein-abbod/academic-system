@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from database import get_db
 from models.user import User, UserRole
@@ -41,7 +41,10 @@ async def get_dashboard_statistics(db: Session = Depends(get_db)):
     ).count()
     
     # Get recent enrollments (last 5)
-    recent_enrollments = db.query(Enrollment).order_by(
+    recent_enrollments = db.query(Enrollment).options(
+        joinedload(Enrollment.student),
+        joinedload(Enrollment.course)
+    ).order_by(
         Enrollment.enrollment_date.desc()
     ).limit(5).all()
     

@@ -1,8 +1,18 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import api from '../../utils/api';
 import Card from '../../components/ui/Card';
-import { BookOpen, CheckCircle, TrendingUp } from 'lucide-react';
+import { 
+  BookOpen, 
+  CheckCircle, 
+  TrendingUp, 
+  Target,
+  Sparkles,
+  Clock,
+  Award,
+  ArrowRight
+} from 'lucide-react';
 
 const Dashboard = () => {
   const { data: stats, isLoading } = useQuery({
@@ -14,7 +24,14 @@ const Dashboard = () => {
   });
 
   if (isLoading) {
-    return <div>Loading dashboard...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-gray-700"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+        </div>
+      </div>
+    );
   }
 
   const statCards = [
@@ -22,57 +39,239 @@ const Dashboard = () => {
       title: 'Active Courses',
       value: stats?.active_courses || 0,
       icon: BookOpen,
-      color: 'from-blue-500 to-cyan-500',
+      gradient: 'from-indigo-500 to-purple-600',
+      bgLight: 'bg-indigo-50 dark:bg-indigo-900/20',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      description: 'Currently enrolled',
     },
     {
-      title: 'Completed Courses',
+      title: 'Completed',
       value: stats?.completed_courses || 0,
       icon: CheckCircle,
-      color: 'from-green-500 to-emerald-500',
+      gradient: 'from-teal-500 to-emerald-600',
+      bgLight: 'bg-teal-50 dark:bg-teal-900/20',
+      iconColor: 'text-teal-600 dark:text-teal-400',
+      description: 'Courses finished',
     },
     {
-      title: 'Average Progress',
+      title: 'Progress',
       value: `${stats?.average_progress || 0}%`,
       icon: TrendingUp,
-      color: 'from-purple-500 to-pink-500',
+      gradient: 'from-pink-500 to-rose-600',
+      bgLight: 'bg-pink-50 dark:bg-pink-900/20',
+      iconColor: 'text-pink-600 dark:text-pink-400',
+      description: 'Average completion',
     },
   ];
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-        Student Dashboard
-      </h1>
+  const progressPercentage = stats?.average_progress || 0;
 
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 dark:from-indigo-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
+          Student Dashboard
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          Welcome back! Continue your learning journey
+        </p>
+      </motion.div>
+
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((stat, index) => (
-          <Card key={index} className="relative overflow-hidden group">
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-10 rounded-bl-full transition-transform group-hover:scale-110`} />
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            className="group relative bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-slate-700 overflow-hidden"
+          >
+            {/* Animated gradient background */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+            
+            {/* Decorative elements */}
+            <div className={`absolute -right-8 -top-8 w-40 h-40 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-500`}></div>
             
             <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                   {stat.title}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
+                <h3 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
                   {stat.value}
                 </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <Target className="w-3 h-3" />
+                  {stat.description}
+                </p>
               </div>
               
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg`}>
-                <stat.icon size={24} />
+              <div className={`p-4 rounded-2xl ${stat.bgLight} group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className={`w-8 h-8 ${stat.iconColor}`} />
               </div>
             </div>
-          </Card>
+          </motion.div>
         ))}
       </div>
 
+      {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <Card title="Start Learning">
-           <div className="p-4 text-center text-gray-500">
-              Go to "My Learning" to access your courses and continue where you left off.
-           </div>
-        </Card>
+        {/* Learning Progress */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card title="Overall Progress" hover={false}>
+            <div className="space-y-6">
+              {/* Circular Progress */}
+              <div className="flex items-center justify-center py-6">
+                <div className="relative w-40 h-40">
+                  {/* Background circle */}
+                  <svg className="w-40 h-40 transform -rotate-90">
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="70"
+                      stroke="currentColor"
+                      strokeWidth="12"
+                      fill="none"
+                      className="text-gray-200 dark:text-slate-700"
+                    />
+                    {/* Progress circle */}
+                    <motion.circle
+                      cx="80"
+                      cy="80"
+                      r="70"
+                      stroke="url(#gradient)"
+                      strokeWidth="12"
+                      fill="none"
+                      strokeLinecap="round"
+                      initial={{ strokeDashoffset: 440 }}
+                      animate={{ strokeDashoffset: 440 - (440 * progressPercentage) / 100 }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      style={{
+                        strokeDasharray: 440,
+                      }}
+                    />
+                    <defs>
+                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#6366f1" />
+                        <stop offset="100%" stopColor="#ec4899" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  {/* Center text */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.7 }}
+                        className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 dark:from-indigo-400 dark:to-pink-400 bg-clip-text text-transparent"
+                      >
+                        {progressPercentage}%
+                      </motion.div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Complete</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Details */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active Courses</span>
+                  </div>
+                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                    {stats?.active_courses || 0}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 rounded-lg bg-teal-50 dark:bg-teal-900/20">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Completed</span>
+                  </div>
+                  <span className="text-sm font-bold text-teal-600 dark:text-teal-400">
+                    {stats?.completed_courses || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <Card title="Quick Actions" hover={false}>
+            <div className="space-y-3">
+              <motion.a
+                href="/student/courses"
+                whileHover={{ x: 4 }}
+                className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/30 dark:hover:to-purple-900/30 transition-all duration-200 group"
+              >
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
+                  <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-white">My Learning</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Continue where you left off</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
+              </motion.a>
+
+              <motion.a
+                href="/student/payments"
+                whileHover={{ x: 4 }}
+                className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 hover:from-pink-100 hover:to-rose-100 dark:hover:from-pink-900/30 dark:hover:to-rose-900/30 transition-all duration-200 group"
+              >
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-700 shadow-sm">
+                  <Award className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-white">My Payments</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">View payment history</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors" />
+              </motion.a>
+            </div>
+
+            {/* Motivational Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="mt-6 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                  <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Keep Going!</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    You're making great progress. Stay consistent and you'll reach your goals!
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

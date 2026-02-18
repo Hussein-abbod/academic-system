@@ -21,40 +21,66 @@ const Payments = () => {
   const queryClient = useQueryClient();
 
   // Fetch payments
-  const { data: payments = [], isLoading } = useQuery({
+  const { 
+    data: payments = [], 
+    isLoading: isLoadingPayments,
+    isError: isPaymentsError,
+    error: paymentsError
+  } = useQuery({
     queryKey: ['admin-payments'],
     queryFn: async () => {
+      console.log('Fetching payments...');
       const response = await api.get('/admin/payments');
+      console.log('Payments fetched:', response.data);
       return response.data;
     }
   });
 
   // Fetch enrollments for dropdown
-  const { data: enrollments = [] } = useQuery({
+  const { 
+    data: enrollments = [], 
+    isLoading: isLoadingEnrollments 
+  } = useQuery({
     queryKey: ['admin-enrollments'],
     queryFn: async () => {
       const response = await api.get('/admin/enrollments');
+      console.log('Enrollments fetched:', response.data);
       return response.data;
     }
   });
 
   // Fetch students
-  const { data: students = [] } = useQuery({
+  const { 
+    data: students = [], 
+    isLoading: isLoadingStudents 
+  } = useQuery({
     queryKey: ['admin-students'],
     queryFn: async () => {
       const response = await api.get('/admin/users?role=STUDENT');
+      console.log('Students fetched:', response.data);
       return response.data;
     }
   });
 
   // Fetch courses
-  const { data: courses = [] } = useQuery({
+  const { 
+    data: courses = [], 
+    isLoading: isLoadingCourses 
+  } = useQuery({
     queryKey: ['admin-courses'],
     queryFn: async () => {
       const response = await api.get('/admin/courses');
+      console.log('Courses fetched:', response.data);
       return response.data;
     }
   });
+
+  const isLoading = isLoadingPayments || isLoadingEnrollments || isLoadingStudents || isLoadingCourses;
+
+  if (isPaymentsError) {
+    console.error('Error fetching payments:', paymentsError);
+    toast.error('Failed to load payments');
+  }
 
   // Create payment mutation
   const createMutation = useMutation({
@@ -131,19 +157,41 @@ const Payments = () => {
     updateMutation.mutate({ id: selectedPayment.id, data: submitData });
   };
 
-  // Get enrollment details
-  const getEnrollmentDetails = (enrollmentId) => {
-    const enrollment = enrollments.find(e => e.id === enrollmentId);
-    if (!enrollment) return { studentName: 'Unknown', courseName: 'Unknown' };
-    
-    const student = students.find(s => s.id === enrollment.student_id);
-    const course = courses.find(c => c.id === enrollment.course_id);
-    
-    return {
-      studentName: student?.full_name || 'Unknown',
-      courseName: course?.name || 'Unknown'
-    };
-  };
+  // Calculate enrollment summaries
+  const enrollmentSummaries = React.useMemo(() => {
+    if (!enrollments.length || !students.length || !courses.length) return [];
+
+    return enrollments.map(enrollment => {
+      const student = students.find(s => s.id === enrollment.student_id);
+      const course = courses.find(c => c.id === enrollment.course_id);
+      
+      const courseFee = course ? course.price : 0;
+      
+      // Calculate total paid for this enrollment
+      const totalPaid = payments
+        .filter(p => p.enrollment_id === enrollment.id && p.payment_status === 'PAID')
+        .reduce((sum, p) => sum + p.amount, 0);
+      
+      const remaining = Math.max(0, courseFee - totalPaid);
+      
+      let status = 'PENDING';
+      if (remaining === 0 && courseFee > 0) status = 'PAID';
+      else if (totalPaid > 0) status = 'PARTIAL';
+
+      return {
+        id: enrollment.id,
+        enrollment_id: enrollment.id, // Keep for compatibility with actions
+        studentName: student?.full_name || 'Unknown',
+        courseName: course?.name || 'Unknown',
+        courseFee,
+        totalPaid,
+        remaining,
+        status,
+        student_id: enrollment.student_id,
+        course_id: enrollment.course_id
+      };
+    });
+  }, [enrollments, students, courses, payments]);
 
   // Get status badge color
   const getStatusColor = (status) => {
@@ -162,77 +210,70 @@ const Payments = () => {
   const columns = [
     {
       header: 'Student',
-      accessorKey: 'enrollment_id',
-      cell: (row) => {
-        const details = getEnrollmentDetails(row.enrollment_id);
-        return (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-semibold text-sm">
-              {details.studentName.charAt(0).toUpperCase()}
-            </div>
-            <span className="font-medium text-gray-900 dark:text-white">
-              {details.studentName}
-            </span>
+      accessorKey: 'studentName',
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-semibold text-sm">
+            {row.studentName.charAt(0).toUpperCase()}
           </div>
-        );
-      }
+          <span className="font-medium text-gray-900 dark:text-white">
+            {row.studentName}
+          </span>
+        </div>
+      )
     },
     {
       header: 'Course',
-      accessorKey: 'course',
-      cell: (row) => {
-        const details = getEnrollmentDetails(row.enrollment_id);
-        return (
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-purple-500" />
-            <span className="text-gray-700 dark:text-gray-300">
-              {details.courseName}
-            </span>
-          </div>
-        );
-      }
+      accessorKey: 'courseName',
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <CreditCard className="w-4 h-4 text-purple-500" />
+          <span className="text-gray-700 dark:text-gray-300">
+            {row.courseName}
+          </span>
+        </div>
+      )
     },
     {
-      header: 'Amount',
-      accessorKey: 'amount',
+      header: 'Total Fee',
+      accessorKey: 'courseFee',
       cell: (row) => (
         <div className="flex items-center gap-1">
-          <DollarSign className="w-4 h-4 text-green-600" />
-          <span className="font-semibold text-green-600 dark:text-green-400">
-            {row.amount.toFixed(2)}
+          <span className="font-medium text-gray-600 dark:text-gray-400">
+            ${row.courseFee.toFixed(2)}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: 'Paid',
+      accessorKey: 'totalPaid',
+      cell: (row) => (
+        <div className="flex items-center gap-1">
+          <span className="font-medium text-green-600 dark:text-green-400">
+            ${row.totalPaid.toFixed(2)}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: 'Remaining',
+      accessorKey: 'remaining',
+      cell: (row) => (
+        <div className="flex items-center gap-1">
+          <span className="font-semibold text-blue-600 dark:text-blue-400">
+            ${row.remaining.toFixed(2)}
           </span>
         </div>
       )
     },
     {
       header: 'Status',
-      accessorKey: 'payment_status',
+      accessorKey: 'status',
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(row.payment_status)}`}>
-          {row.payment_status}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(row.status)}`}>
+          {row.status}
         </span>
-      )
-    },
-    {
-      header: 'Payment Date',
-      accessorKey: 'payment_date',
-      cell: (row) => row.payment_date ? (
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          {new Date(row.payment_date).toLocaleDateString()}
-        </span>
-      ) : (
-        <span className="text-gray-400 text-sm">Not paid</span>
-      )
-    },
-    {
-      header: 'Notes',
-      accessorKey: 'notes',
-      cell: (row) => row.notes ? (
-        <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs block">
-          {row.notes}
-        </span>
-      ) : (
-        <span className="text-gray-400 text-sm">-</span>
       )
     },
     {
@@ -240,29 +281,44 @@ const Payments = () => {
       accessorKey: 'actions',
       cell: (row) => (
         <button
-          onClick={() => handleEdit(row)}
-          className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
-          title="Edit"
+          onClick={() => {
+             // Pre-fill form for this enrollment
+             setFormData({
+               enrollment_id: row.enrollment_id,
+               amount: '',
+               payment_status: 'PAID',
+               notes: ''
+             });
+             setIsCreateModalOpen(true);
+          }}
+          disabled={row.remaining <= 0}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+          title="Record Payment"
         >
-          <Edit2 className="w-4 h-4" />
+          <DollarSign className="w-4 h-4" />
+          Make Payment
         </button>
       )
     }
   ];
 
-  // Calculate statistics
-  const stats = {
-    total: payments.reduce((sum, p) => sum + p.amount, 0),
-    paid: payments.filter(p => p.payment_status === 'PAID').reduce((sum, p) => sum + p.amount, 0),
-    pending: payments.filter(p => p.payment_status === 'PENDING').reduce((sum, p) => sum + p.amount, 0),
-    partial: payments.filter(p => p.payment_status === 'PARTIAL').reduce((sum, p) => sum + p.amount, 0),
-    count: {
-      total: payments.length,
-      paid: payments.filter(p => p.payment_status === 'PAID').length,
-      pending: payments.filter(p => p.payment_status === 'PENDING').length,
-      partial: payments.filter(p => p.payment_status === 'PARTIAL').length
-    }
-  };
+  // Calculate global stats from summaries
+  const stats = React.useMemo(() => {
+    return {
+      totalRevenue: enrollmentSummaries.reduce((sum, item) => sum + item.totalPaid, 0),
+      totalPending: enrollmentSummaries.reduce((sum, item) => sum + item.remaining, 0),
+      fullyPaidCount: enrollmentSummaries.filter(item => item.status === 'PAID').length,
+      partialCount: enrollmentSummaries.filter(item => item.status === 'PARTIAL').length
+    };
+  }, [enrollmentSummaries]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -273,16 +329,9 @@ const Payments = () => {
             Payment Management
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Track and manage student payments
+            Track student enrollments and payment status
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Record Payment
-        </button>
       </div>
 
       {/* Statistics */}
@@ -292,35 +341,35 @@ const Payments = () => {
             <div className="text-sm opacity-90">Total Revenue</div>
             <DollarSign className="w-5 h-5" />
           </div>
-          <div className="text-3xl font-bold">${stats.total.toFixed(2)}</div>
-          <div className="text-xs opacity-75 mt-1">{stats.count.total} payments</div>
+          <div className="text-3xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+          <div className="text-xs opacity-75 mt-1">Collected across all courses</div>
         </div>
         
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Paid</div>
-          <div className="text-2xl font-bold text-green-600">${stats.paid.toFixed(2)}</div>
-          <div className="text-xs text-gray-500 mt-1">{stats.count.paid} payments</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Outstanding Amount</div>
+          <div className="text-2xl font-bold text-yellow-600">${stats.totalPending.toFixed(2)}</div>
+          <div className="text-xs text-gray-500 mt-1">Pending payments</div>
         </div>
         
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Pending</div>
-          <div className="text-2xl font-bold text-yellow-600">${stats.pending.toFixed(2)}</div>
-          <div className="text-xs text-gray-500 mt-1">{stats.count.pending} payments</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Fully Paid</div>
+          <div className="text-2xl font-bold text-green-600">{stats.fullyPaidCount}</div>
+          <div className="text-xs text-gray-500 mt-1">Enrollments completed</div>
         </div>
         
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Partial</div>
-          <div className="text-2xl font-bold text-orange-600">${stats.partial.toFixed(2)}</div>
-          <div className="text-xs text-gray-500 mt-1">{stats.count.partial} payments</div>
+          <div className="text-2xl font-bold text-orange-600">{stats.partialCount}</div>
+          <div className="text-xs text-gray-500 mt-1">Enrollments in progress</div>
         </div>
       </div>
 
-      {/* Payments Table */}
+      {/* Enrollments Table */}
       <Table
-        data={payments}
+        data={enrollmentSummaries}
         columns={columns}
         searchable
-        searchKeys={['enrollment_id', 'amount']}
+        searchKeys={['studentName', 'courseName']}
       />
 
       {/* Create Modal */}
@@ -336,41 +385,13 @@ const Payments = () => {
           enrollments={enrollments}
           students={students}
           courses={courses}
+          payments={payments}
           onSubmit={handleSubmitCreate}
           onCancel={() => {
             setIsCreateModalOpen(false);
             resetForm();
           }}
           isLoading={createMutation.isPending}
-          isEdit={false}
-        />
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedPayment(null);
-          resetForm();
-        }}
-        title="Edit Payment"
-        size="md"
-      >
-        <PaymentForm
-          formData={formData}
-          setFormData={setFormData}
-          enrollments={enrollments}
-          students={students}
-          courses={courses}
-          onSubmit={handleSubmitEdit}
-          onCancel={() => {
-            setIsEditModalOpen(false);
-            setSelectedPayment(null);
-            resetForm();
-          }}
-          isLoading={updateMutation.isPending}
-          isEdit={true}
         />
       </Modal>
     </div>
@@ -378,57 +399,152 @@ const Payments = () => {
 };
 
 // PaymentForm component
-const PaymentForm = ({ formData, setFormData, enrollments, students, courses, onSubmit, onCancel, isLoading, isEdit }) => {
-  // Get enrollment label
-  const getEnrollmentLabel = (enrollmentId) => {
-    const enrollment = enrollments.find(e => e.id === enrollmentId);
-    if (!enrollment) return 'Unknown';
+const PaymentForm = ({ 
+  formData, 
+  setFormData, 
+  enrollments, 
+  students, 
+  courses, 
+  payments,
+  onSubmit, 
+  onCancel, 
+  isLoading 
+}) => {
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [validationError, setValidationError] = useState('');
+
+  // Initialize selected student from formData (if pre-filled)
+  React.useEffect(() => {
+    if (formData.enrollment_id) {
+      const enrollment = enrollments.find(e => e.id === formData.enrollment_id);
+      if (enrollment) {
+        setSelectedStudentId(enrollment.student_id);
+      }
+    }
+  }, [formData.enrollment_id, enrollments]);
+
+  // Derived state for financial summary
+  const selectedEnrollment = enrollments.find(e => e.id === formData.enrollment_id);
+  const selectedCourse = selectedEnrollment ? courses.find(c => c.id === selectedEnrollment.course_id) : null;
+  
+  const courseFee = selectedCourse ? selectedCourse.price : 0;
+  
+  // Calculate already paid amount
+  const alreadyPaid = React.useMemo(() => {
+    if (!formData.enrollment_id) return 0;
     
-    const student = students.find(s => s.id === enrollment.student_id);
-    const course = courses.find(c => c.id === enrollment.course_id);
-    
-    return `${student?.full_name || 'Unknown'} - ${course?.name || 'Unknown'}`;
+    return payments
+      .filter(p => 
+        p.enrollment_id === formData.enrollment_id && 
+        p.payment_status === 'PAID'
+      )
+      .reduce((sum, p) => sum + p.amount, 0);
+  }, [payments, formData.enrollment_id]);
+
+  const remainingBalance = Math.max(0, courseFee - alreadyPaid);
+
+  // Validate amount against remaining balance
+  React.useEffect(() => {
+    if (formData.amount && parseFloat(formData.amount) > remainingBalance) {
+      setValidationError(`Amount exceeds remaining balance of $${remainingBalance.toFixed(2)}`);
+    } else {
+      setValidationError('');
+    }
+  }, [formData.amount, remainingBalance]);
+
+  // Filter enrollments for the selected student
+  const studentEnrollments = React.useMemo(() => {
+    if (!selectedStudentId) return [];
+    return enrollments.filter(e => e.student_id === selectedStudentId);
+  }, [selectedStudentId, enrollments]);
+
+  // Get course name helper
+  const getCourseName = (courseId) => {
+    const course = courses.find(c => c.id === courseId);
+    return course ? course.name : 'Unknown Course';
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (parseFloat(formData.amount) > remainingBalance) {
+      return; 
+    }
+    // Force status to PAID
+    setFormData(prev => ({ ...prev, payment_status: 'PAID' }));
+    onSubmit(e);
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Student Selection */}
       <Select
-        label="Enrollment"
+        label="Student"
+        required
+        value={selectedStudentId}
+        onChange={(e) => {
+          setSelectedStudentId(e.target.value);
+          setFormData({ ...formData, enrollment_id: '' });
+        }}
+        options={[
+          { value: '', label: 'Select Student' },
+          ...students.map(student => ({
+            value: student.id,
+            label: student.full_name
+          }))
+        ]}
+      />
+
+      {/* Course Selection (Filtered by Student) */}
+      <Select
+        label="Course"
         required
         value={formData.enrollment_id}
         onChange={(e) => setFormData({ ...formData, enrollment_id: e.target.value })}
         options={[
-          { value: '', label: 'Select Enrollment' },
-          ...enrollments.map(enrollment => ({
+          { value: '', label: 'Select Course' },
+          ...studentEnrollments.map(enrollment => ({
             value: enrollment.id,
-            label: getEnrollmentLabel(enrollment.id)
+            label: getCourseName(enrollment.course_id)
           }))
         ]}
-        disabled={isEdit}
+        disabled={!selectedStudentId}
       />
 
-      <Input
-        label="Amount ($)"
-        type="number"
-        required
-        value={formData.amount}
-        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-        min="0"
-        step="0.01"
-        placeholder="0.00"
-      />
+      {/* Payment Summary */}
+      {selectedCourse && (
+        <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700 space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Total Course Fee:</span>
+            <span className="font-semibold text-gray-900 dark:text-white">${courseFee.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Already Paid:</span>
+            <span className="font-semibold text-green-600">${alreadyPaid.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between border-t border-gray-200 dark:border-slate-700 pt-2 mt-2">
+            <span className="font-medium text-gray-900 dark:text-white">Remaining Balance:</span>
+            <span className="font-bold text-blue-600">${remainingBalance.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
 
-      <Select
-        label="Payment Status"
-        required
-        value={formData.payment_status}
-        onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
-        options={[
-          { value: 'PENDING', label: 'Pending' },
-          { value: 'PAID', label: 'Paid' },
-          { value: 'PARTIAL', label: 'Partial' }
-        ]}
-      />
+      <div className="space-y-1">
+        <Input
+          label="Payment Amount ($)"
+          type="number"
+          required
+          value={formData.amount}
+          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+          min="0"
+          max={remainingBalance}
+          step="0.01"
+          placeholder="0.00"
+          className={validationError ? "border-red-500 focus:ring-red-500" : ""}
+        />
+        {validationError && (
+          <p className="text-xs text-red-500">{validationError}</p>
+        )}
+      </div>
 
       <TextArea
         label="Notes (optional)"
@@ -449,7 +565,7 @@ const PaymentForm = ({ formData, setFormData, enrollments, students, courses, on
         </button>
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !!validationError}
           className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isLoading && (

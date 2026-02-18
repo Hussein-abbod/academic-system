@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import date
-
+from datetime import date, datetime
 
 class LevelCreate(BaseModel):
     """Schema for creating a level"""
@@ -120,9 +119,9 @@ class PaymentResponse(BaseModel):
     enrollment_id: str
     amount: float
     payment_status: str
-    payment_date: Optional[str] = None
+    payment_date: Optional[datetime] = None
     notes: Optional[str] = None
-    created_at: str
+    created_at: datetime
     
     class Config:
         from_attributes = True

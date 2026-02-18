@@ -12,6 +12,8 @@ import {
   Activity
 } from 'lucide-react';
 import api from '../../utils/api';
+import RevenueChart from '../../components/dashboard/RevenueChart';
+import ProgressChart from '../../components/dashboard/ProgressChart';
 
 const Dashboard = () => {
   const { data: stats, isLoading, error } = useQuery({
@@ -138,6 +140,17 @@ const Dashboard = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* Charts Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <RevenueChart />
+        <ProgressChart />
+      </motion.div>
 
       {/* Recent Enrollments */}
       <motion.div

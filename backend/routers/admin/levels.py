@@ -12,19 +12,34 @@ router = APIRouter(prefix="/admin/levels", tags=["Admin - Levels"])
 @router.post("", response_model=LevelResponse, dependencies=[Depends(require_admin)])
 async def create_level(level_data: LevelCreate, db: Session = Depends(get_db)):
     """Create a new level"""
-    new_level = Level(**level_data.dict())
+    new_level = Level(**level_data.model_dump())
     db.add(new_level)
     db.commit()
     db.refresh(new_level)
     
-    return LevelResponse.from_orm(new_level)
+    return {
+        "id": str(new_level.id),
+        "name": new_level.name,
+        "description": new_level.description,
+        "order": new_level.order,
+        "passing_score": float(new_level.passing_score) if new_level.passing_score else None
+    }
 
 
 @router.get("", response_model=List[LevelResponse])
 async def list_levels(db: Session = Depends(get_db)):
     """List all levels (ordered)"""
     levels = db.query(Level).order_by(Level.order).all()
-    return [LevelResponse.from_orm(level) for level in levels]
+    return [
+        {
+            "id": str(level.id),
+            "name": level.name,
+            "description": level.description,
+            "order": level.order,
+            "passing_score": float(level.passing_score) if level.passing_score else None
+        }
+        for level in levels
+    ]
 
 
 @router.get("/{level_id}", response_model=LevelResponse, dependencies=[Depends(require_admin)])
@@ -36,7 +51,13 @@ async def get_level(level_id: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Level not found"
         )
-    return LevelResponse.from_orm(level)
+    return {
+        "id": str(level.id),
+        "name": level.name,
+        "description": level.description,
+        "order": level.order,
+        "passing_score": float(level.passing_score) if level.passing_score else None
+    }
 
 
 @router.put("/{level_id}", response_model=LevelResponse, dependencies=[Depends(require_admin)])
@@ -50,14 +71,20 @@ async def update_level(level_id: str, level_data: LevelUpdate, db: Session = Dep
         )
     
     # Update fields
-    update_data = level_data.dict(exclude_unset=True)
+    update_data = level_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(level, field, value)
     
     db.commit()
     db.refresh(level)
     
-    return LevelResponse.from_orm(level)
+    return {
+        "id": str(level.id),
+        "name": level.name,
+        "description": level.description,
+        "order": level.order,
+        "passing_score": float(level.passing_score) if level.passing_score else None
+    }
 
 
 @router.delete("/{level_id}", dependencies=[Depends(require_admin)])

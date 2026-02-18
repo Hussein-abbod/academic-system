@@ -2,39 +2,14 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import date, datetime
 
-class LevelCreate(BaseModel):
-    """Schema for creating a level"""
-    name: str
-    description: Optional[str] = None
-    order: int
-    passing_score_requirement: int = 80
 
 
-class LevelUpdate(BaseModel):
-    """Schema for updating a level"""
-    name: Optional[str] = None
-    description: Optional[str] = None
-    order: Optional[int] = None
-    passing_score_requirement: Optional[int] = None
-
-
-class LevelResponse(BaseModel):
-    """Schema for level response"""
-    id: str
-    name: str
-    description: Optional[str] = None
-    order: int
-    passing_score_requirement: int
-    
-    class Config:
-        from_attributes = True
 
 
 class CourseCreate(BaseModel):
     """Schema for creating a course"""
     name: str
     description: Optional[str] = None
-    level_id: str
     teacher_id: Optional[str] = None
     capacity: int = 20
     start_date: Optional[date] = None
@@ -48,7 +23,6 @@ class CourseUpdate(BaseModel):
     """Schema for updating a course"""
     name: Optional[str] = None
     description: Optional[str] = None
-    level_id: Optional[str] = None
     teacher_id: Optional[str] = None
     capacity: Optional[int] = None
     start_date: Optional[date] = None
@@ -64,7 +38,6 @@ class CourseResponse(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
-    level_id: str
     teacher_id: Optional[str] = None
     capacity: int
     start_date: Optional[date] = None
@@ -73,7 +46,6 @@ class CourseResponse(BaseModel):
     end_time: Optional[str] = None
     price: float
     is_active: bool
-    level: Optional[LevelResponse] = None
     
     class Config:
         from_attributes = True

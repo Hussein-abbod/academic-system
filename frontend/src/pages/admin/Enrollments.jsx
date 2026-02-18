@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, UserCheck, BookOpen, TrendingUp } from 'lucide-react';
+import { Plus, Edit2, UserCheck, BookOpen, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../utils/api';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
+
 import { Input, Select } from '../../components/ui/forms';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 
 const Enrollments = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [formData, setFormData] = useState({
     student_id: '',
@@ -99,21 +100,7 @@ const Enrollments = () => {
     }
   });
 
-  // Delete enrollment mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/admin/enrollments/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-enrollments']);
-      toast.success('Enrollment deleted successfully!');
-      setIsDeleteDialogOpen(false);
-      setSelectedEnrollment(null);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.detail || 'Failed to delete enrollment');
-    }
-  });
+
 
   const resetForm = () => {
     setFormData({
@@ -138,10 +125,7 @@ const Enrollments = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = (enrollment) => {
-    setSelectedEnrollment(enrollment);
-    setIsDeleteDialogOpen(true);
-  };
+
 
   const handleSubmitCreate = (e) => {
     e.preventDefault();
@@ -162,9 +146,7 @@ const Enrollments = () => {
     updateMutation.mutate({ id: selectedEnrollment.id, data: submitData });
   };
 
-  const handleConfirmDelete = () => {
-    deleteMutation.mutate(selectedEnrollment.id);
-  };
+
 
   // Get student name
   const getStudentName = (studentId) => {
@@ -237,13 +219,6 @@ const Enrollments = () => {
             title="Edit"
           >
             <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(row)}
-            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       )
@@ -357,20 +332,7 @@ const Enrollments = () => {
         />
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setSelectedEnrollment(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        title="Delete Enrollment"
-        message="Are you sure you want to delete this enrollment? This action cannot be undone."
-        confirmText="Delete"
-        variant="danger"
-        loading={deleteMutation.isPending}
-      />
+
     </div>
   );
 };
@@ -393,15 +355,13 @@ const EnrollmentForm = ({ formData, setFormData, students, courses, enrollments 
     <form onSubmit={onSubmit} className="space-y-4">
       {!isEdit && (
         <>
-          <Select
+          <SearchableSelect
             label="Student"
             required
             value={formData.student_id}
-            onChange={(e) => setFormData({ ...formData, student_id: e.target.value, course_id: '' })}
-            options={[
-              { value: '', label: 'Select Student' },
-              ...students.map(student => ({ value: student.id, label: student.full_name }))
-            ]}
+            onChange={(value) => setFormData({ ...formData, student_id: value, course_id: '' })}
+            options={students.map(student => ({ value: student.id, label: student.full_name }))}
+            placeholder="Select or search student..."
           />
 
           <Select

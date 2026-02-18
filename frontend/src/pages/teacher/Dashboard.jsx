@@ -247,10 +247,7 @@ const Dashboard = () => {
                   <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
                     {course.description || 'No description'}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <Calendar className="w-3 h-3" />
-                    <span>{course.level_name || 'All Levels'}</span>
-                  </div>
+
                 </motion.div>
               ))}
             </div>

@@ -7,6 +7,7 @@ import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Input, Select, TextArea, Checkbox } from '../../components/ui/forms';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 
 const Courses = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -16,7 +17,7 @@ const Courses = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    level_id: '',
+
     teacher_id: '',
     capacity: 20,
     start_time: '',
@@ -36,14 +37,7 @@ const Courses = () => {
     }
   });
 
-  // Fetch levels for dropdown
-  const { data: levels = [] } = useQuery({
-    queryKey: ['levels'],
-    queryFn: async () => {
-      const response = await api.get('/admin/levels');
-      return response.data;
-    }
-  });
+
 
   // Fetch teachers for dropdown
   const { data: teachers = [] } = useQuery({
@@ -109,7 +103,7 @@ const Courses = () => {
     setFormData({
       name: '',
       description: '',
-      level_id: '',
+
       teacher_id: '',
       capacity: 20,
       start_time: '',
@@ -129,7 +123,7 @@ const Courses = () => {
     setFormData({
       name: course.name,
       description: course.description || '',
-      level_id: course.level_id,
+
       teacher_id: course.teacher_id || '',
       capacity: course.capacity,
       start_time: course.start_time || '',
@@ -178,15 +172,7 @@ const Courses = () => {
         </div>
       )
     },
-    {
-      header: 'Level',
-      accessorKey: 'level.name',
-      cell: (row) => (
-        <span className="px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
-          {row.level?.name || 'N/A'}
-        </span>
-      )
-    },
+
     {
       header: 'Teacher',
       accessorKey: 'teacher_id',
@@ -277,7 +263,7 @@ const Courses = () => {
         data={courses}
         columns={columns}
         searchable
-        searchKeys={['name', 'level.name']}
+        searchKeys={['name']}
       />
 
       {/* Create Modal */}
@@ -290,7 +276,7 @@ const Courses = () => {
         <CourseForm
           formData={formData}
           setFormData={setFormData}
-          levels={levels}
+
           teachers={teachers}
           onSubmit={handleSubmitCreate}
           onCancel={() => {
@@ -315,7 +301,7 @@ const Courses = () => {
         <CourseForm
           formData={formData}
           setFormData={setFormData}
-          levels={levels}
+
           teachers={teachers}
           onSubmit={handleSubmitEdit}
           onCancel={() => {
@@ -346,7 +332,7 @@ const Courses = () => {
 };
 
 // CourseForm component moved outside to prevent re-creation on every render
-const CourseForm = ({ formData, setFormData, levels, teachers, onSubmit, onCancel, isLoading }) => (
+const CourseForm = ({ formData, setFormData, teachers, onSubmit, onCancel, isLoading }) => (
   <form onSubmit={onSubmit} className="space-y-4">
     <Input
       label="Course Name"
@@ -365,25 +351,17 @@ const CourseForm = ({ formData, setFormData, levels, teachers, onSubmit, onCance
     />
 
     <div className="grid grid-cols-2 gap-4">
-      <Select
-        label="Level"
-        required
-        value={formData.level_id}
-        onChange={(e) => setFormData({ ...formData, level_id: e.target.value })}
-        options={[
-          { value: '', label: 'Select Level' },
-          ...levels.map(level => ({ value: level.id, label: level.name }))
-        ]}
-      />
 
-      <Select
+
+      <SearchableSelect
         label="Teacher"
         value={formData.teacher_id}
-        onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })}
+        onChange={(value) => setFormData({ ...formData, teacher_id: value })}
         options={[
-          { value: '', label: 'Not assigned' },
+          { value: '', label: 'No Teacher' },
           ...teachers.map(teacher => ({ value: teacher.id, label: teacher.full_name }))
         ]}
+        placeholder="Select or search teacher..."
       />
     </div>
 

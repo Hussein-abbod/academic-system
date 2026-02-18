@@ -23,7 +23,6 @@ async def create_course(course_data: CourseCreate, db: Session = Depends(get_db)
 @router.get("", response_model=List[CourseResponse], dependencies=[Depends(require_admin)])
 async def list_courses(
     is_active: bool = None,
-    level_id: str = None,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
@@ -33,8 +32,6 @@ async def list_courses(
     
     if is_active is not None:
         query = query.filter(Course.is_active == is_active)
-    if level_id:
-        query = query.filter(Course.level_id == level_id)
     
     courses = query.offset(skip).limit(limit).all()
     return [CourseResponse.from_orm(course) for course in courses]

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import Base, engine
 from routers import auth
-from routers.admin import users, courses, levels, enrollments, payments, statistics
+from routers.admin import users, courses, enrollments, payments, statistics
 from routers import teacher, student
 
 # Create database tables
@@ -29,7 +29,6 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(courses.router)
-app.include_router(levels.router)
 app.include_router(enrollments.router)
 app.include_router(payments.router)
 app.include_router(statistics.router)

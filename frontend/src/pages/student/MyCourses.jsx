@@ -41,9 +41,7 @@ const MyCourses = () => {
               {enrollment.course_name}
             </h3>
             
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 flex-grow">
-               Level: {enrollment.course_id} {/* Ideally we want Level Name here */}
-            </p>
+
 
             <div className="space-y-4">
               <div className="relative pt-1 space-y-2">

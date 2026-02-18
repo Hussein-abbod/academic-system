@@ -13,7 +13,7 @@ import Teachers from './pages/admin/Teachers';
 import Students from './pages/admin/Students';
 import Enrollments from './pages/admin/Enrollments';
 import Payments from './pages/admin/Payments';
-import Levels from './pages/admin/Levels';
+
 
 import TeacherLayout from './layouts/TeacherLayout';
 import TeacherDashboard from './pages/teacher/Dashboard';
@@ -58,7 +58,7 @@ function App() {
                 <Route path="students" element={<Students />} />
                 <Route path="enrollments" element={<Enrollments />} />
                 <Route path="payments" element={<Payments />} />
-                <Route path="levels" element={<Levels />} />
+
               </Route>
 
               {/* Teacher Routes */}

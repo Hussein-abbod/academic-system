@@ -6,12 +6,14 @@ import api from '../../utils/api';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+
 import { Input } from '../../components/ui/forms';
 
 const Students = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -92,6 +94,8 @@ const Students = () => {
     }
   });
 
+
+
   const resetForm = () => {
     setFormData({
       email: '',
@@ -124,6 +128,12 @@ const Students = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleConfirmDelete = () => {
+    deleteMutation.mutate(selectedStudent.id);
+  };
+
+
+
   const handleSubmitCreate = (e) => {
     e.preventDefault();
     createMutation.mutate(formData);
@@ -138,9 +148,7 @@ const Students = () => {
     updateMutation.mutate({ id: selectedStudent.id, data: submitData });
   };
 
-  const handleConfirmDelete = () => {
-    deleteMutation.mutate(selectedStudent.id);
-  };
+
 
   // Get student stats
   const getStudentStats = (studentId) => {
@@ -274,6 +282,21 @@ const Students = () => {
         />
       </Modal>
 
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setSelectedStudent(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Student"
+        message={`Are you sure you want to delete "${selectedStudent?.full_name}"? This will also affect their enrollments.`}
+        confirmText="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+      />
+
       {/* Edit Modal */}
       <Modal
         isOpen={isEditModalOpen}
@@ -299,20 +322,7 @@ const Students = () => {
         />
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setSelectedStudent(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        title="Delete Student"
-        message={`Are you sure you want to delete "${selectedStudent?.full_name}"? This will also affect their enrollments.`}
-        confirmText="Delete"
-        variant="danger"
-        loading={deleteMutation.isPending}
-      />
+
     </div>
   );
 };

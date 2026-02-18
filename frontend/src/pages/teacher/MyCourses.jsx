@@ -30,20 +30,7 @@ const MyCourses = () => {
         </div>
       ),
     },
-    {
-      header: 'Level',
-      accessorKey: 'level.name',
-      cell: (row) => (
-        <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-          {row.level_name} 
-          {/* Note: Backend might need to return level details or just level_id. 
-              Assuming CourseResponse includes level_name or we fetch it. 
-              The CourseResponse schema usually has level_id. 
-              We might need to adjust backend to return level name or fetch levels.
-              For now keeping simple. */}
-        </span>
-      ),
-    },
+
     {
       header: 'Schedule',
       accessorKey: 'start_date',

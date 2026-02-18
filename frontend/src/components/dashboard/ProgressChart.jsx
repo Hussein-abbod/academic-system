@@ -59,17 +59,12 @@ const ProgressChart = () => {
 
     const completionRate = total > 0 ? (completed / total) * 100 : 0;
     
-    const avgProgress = enrollments.length > 0
-      ? enrollments.reduce((sum, e) => sum + (e.current_progress || 0), 0) / enrollments.length
-      : 0;
-
     return {
       total,
       completed,
       active,
       dropped,
-      completionRate,
-      avgProgress
+      completionRate
     };
   }, [enrollments]);
 
@@ -117,10 +112,10 @@ const ProgressChart = () => {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700 space-y-6">
       {/* Header */}
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white">Student Progress Overview</h2>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white">Enrollment Overview</h2>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800">
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -138,16 +133,6 @@ const ProgressChart = () => {
           </div>
           <div className="text-2xl font-bold text-green-700 dark:text-green-300">
             {stats.completionRate.toFixed(1)}%
-          </div>
-        </div>
-
-        <div className="p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800">
-          <div className="flex items-center gap-2 mb-2">
-            <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">Avg Progress</span>
-          </div>
-          <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-            {stats.avgProgress.toFixed(1)}%
           </div>
         </div>
 

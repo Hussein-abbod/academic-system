@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, DollarSign, CreditCard, TrendingUp } from 'lucide-react';
+// import { Plus, DollarSign, CreditCard, Calendar, User, ChevronRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../utils/api';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import { Input, Select, TextArea } from '../../components/ui/forms';
 
+// Helper to calculate month difference
+const differenceInMonths = (d1, d2) => {
+  const date1 = new Date(d1);
+  const date2 = new Date(d2);
+  let months = (date1.getFullYear() - date2.getFullYear()) * 12;
+  months -= date2.getMonth();
+  months += date1.getMonth();
+  return months <= 0 ? 0 : months;
+};
+
+const SEARCH_KEYS = ['studentName'];
+
 const Payments = () => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [maxAmount, setMaxAmount] = useState(0);
+  
   const [formData, setFormData] = useState({
     enrollment_id: '',
     amount: '',
@@ -20,562 +34,450 @@ const Payments = () => {
 
   const queryClient = useQueryClient();
 
-  // Fetch payments
-  const { 
-    data: payments = [], 
-    isLoading: isLoadingPayments,
-    isError: isPaymentsError,
-    error: paymentsError
-  } = useQuery({
+  // Fetch Data
+  const { data: payments = [], isLoading: pLoading } = useQuery({
     queryKey: ['admin-payments'],
-    queryFn: async () => {
-      console.log('Fetching payments...');
-      const response = await api.get('/admin/payments');
-      console.log('Payments fetched:', response.data);
-      return response.data;
-    }
+    queryFn: async () => (await api.get('/admin/payments')).data
   });
 
-  // Fetch enrollments for dropdown
-  const { 
-    data: enrollments = [], 
-    isLoading: isLoadingEnrollments 
-  } = useQuery({
+  const { data: enrollments = [], isLoading: eLoading } = useQuery({
     queryKey: ['admin-enrollments'],
-    queryFn: async () => {
-      const response = await api.get('/admin/enrollments');
-      console.log('Enrollments fetched:', response.data);
-      return response.data;
-    }
+    queryFn: async () => (await api.get('/admin/enrollments')).data
   });
 
-  // Fetch students
-  const { 
-    data: students = [], 
-    isLoading: isLoadingStudents 
-  } = useQuery({
+  const { data: students = [], isLoading: sLoading } = useQuery({
     queryKey: ['admin-students'],
-    queryFn: async () => {
-      const response = await api.get('/admin/users?role=STUDENT');
-      console.log('Students fetched:', response.data);
-      return response.data;
-    }
+    queryFn: async () => (await api.get('/admin/users?role=STUDENT')).data
   });
 
-  // Fetch courses
-  const { 
-    data: courses = [], 
-    isLoading: isLoadingCourses 
-  } = useQuery({
+  const { data: courses = [], isLoading: cLoading } = useQuery({
     queryKey: ['admin-courses'],
-    queryFn: async () => {
-      const response = await api.get('/admin/courses');
-      console.log('Courses fetched:', response.data);
-      return response.data;
-    }
+    queryFn: async () => (await api.get('/admin/courses')).data
   });
 
-  const isLoading = isLoadingPayments || isLoadingEnrollments || isLoadingStudents || isLoadingCourses;
+  const isLoading = pLoading || eLoading || sLoading || cLoading;
 
-  if (isPaymentsError) {
-    console.error('Error fetching payments:', paymentsError);
-    toast.error('Failed to load payments');
-  }
-
-  // Create payment mutation
+  // Mutations
   const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const response = await api.post('/admin/payments', data);
-      return response.data;
-    },
+    mutationFn: async (data) => (await api.post('/admin/payments', data)).data,
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-payments']);
       toast.success('Payment recorded successfully!');
-      setIsCreateModalOpen(false);
+      setIsPaymentModalOpen(false);
       resetForm();
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.detail || 'Failed to record payment');
-    }
-  });
-
-  // Update payment mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
-      const response = await api.put(`/admin/payments/${id}`, data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-payments']);
-      toast.success('Payment updated successfully!');
-      setIsEditModalOpen(false);
-      setSelectedPayment(null);
-      resetForm();
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.detail || 'Failed to update payment');
-    }
+    onError: (error) => toast.error(error.response?.data?.detail || 'Failed to record payment')
   });
 
   const resetForm = () => {
-    setFormData({
-      enrollment_id: '',
-      amount: '',
-      payment_status: 'PENDING',
-      notes: ''
-    });
+    setFormData({ enrollment_id: '', amount: '', payment_status: 'PENDING', notes: '' });
   };
 
-  const handleCreate = () => {
-    resetForm();
-    setIsCreateModalOpen(true);
-  };
-
-  const handleEdit = (payment) => {
-    setSelectedPayment(payment);
-    setFormData({
-      enrollment_id: payment.enrollment_id,
-      amount: payment.amount,
-      payment_status: payment.payment_status,
-      notes: payment.notes || ''
-    });
-    setIsEditModalOpen(true);
-  };
-
-  const handleSubmitCreate = (e) => {
-    e.preventDefault();
-    const submitData = { ...formData };
-    if (!submitData.notes) delete submitData.notes;
-    createMutation.mutate(submitData);
-  };
-
-  const handleSubmitEdit = (e) => {
-    e.preventDefault();
-    const submitData = { ...formData };
-    delete submitData.enrollment_id; // Can't change enrollment
-    if (!submitData.notes) delete submitData.notes;
-    updateMutation.mutate({ id: selectedPayment.id, data: submitData });
-  };
-
-  // Calculate enrollment summaries
-  const enrollmentSummaries = React.useMemo(() => {
-    if (!enrollments.length || !students.length || !courses.length) return [];
+  // --- Logic: Calculate Financials per Enrollment ---
+  const enrollmentFinancials = useMemo(() => {
+    if (!Array.isArray(enrollments) || !enrollments.length || !Array.isArray(courses) || !courses.length || !Array.isArray(students) || !students.length || !Array.isArray(payments)) return [];
 
     return enrollments.map(enrollment => {
-      const student = students.find(s => s.id === enrollment.student_id);
       const course = courses.find(c => c.id === enrollment.course_id);
+      const student = students.find(s => s.id === enrollment.student_id);
       
-      const courseFee = course ? course.price : 0;
+      if (!course || !student) return null;
+
+      // 1. Calculate Months Enrolled
+      // Enrollment date to Now
+      // If enrolled today, count as 1 month due immediately (or 0 if postpaid, assuming prepaid here: 1st month due on signup)
+      const enrollmentDate = new Date(enrollment.enrollment_date);
+      const now = new Date();
       
-      // Calculate total paid for this enrollment
+      // Logic: Months passed since enrollment + 1 for current month
+      const monthsEnrolled = differenceInMonths(now, enrollmentDate) + 1;
+      
+      // 2. Calculate Total Expected
+      const monthlyPrice = course.price; // Reusing price field
+      const totalExpected = monthsEnrolled * monthlyPrice;
+
+      // 3. Calculate Total Paid
       const totalPaid = payments
         .filter(p => p.enrollment_id === enrollment.id && p.payment_status === 'PAID')
         .reduce((sum, p) => sum + p.amount, 0);
+
+      const balance = totalExpected - totalPaid;
       
-      const remaining = Math.max(0, courseFee - totalPaid);
-      
-      let status = 'PENDING';
-      if (remaining === 0 && courseFee > 0) status = 'PAID';
-      else if (totalPaid > 0) status = 'PARTIAL';
+      let status = 'UP TO DATE';
+      if (balance > 0) status = 'OVERDUE';
+      if (balance > monthlyPrice) status = 'SERIOUSLY OVERDUE'; // More than 1 month behind
 
       return {
-        id: enrollment.id,
-        enrollment_id: enrollment.id, // Keep for compatibility with actions
-        studentName: student?.full_name || 'Unknown',
-        courseName: course?.name || 'Unknown',
-        courseFee,
+        ...enrollment,
+        studentName: student.full_name || 'Unknown Student',
+        courseName: course.name || 'Unknown Course',
+        monthlyPrice,
+        enrollmentDate,
+        monthsEnrolled,
+        totalExpected,
         totalPaid,
-        remaining,
+        balance: isNaN(balance) ? 0 : balance,
         status,
-        student_id: enrollment.student_id,
-        course_id: enrollment.course_id
+        course // Include course object for details
       };
-    });
-  }, [enrollments, students, courses, payments]);
+    }).filter(Boolean);
+  }, [enrollments, courses, students, payments]);
 
-  // Get status badge color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'PAID':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
-      case 'PENDING':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
-      case 'PARTIAL':
-        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
-    }
+  // Group by Student for the Main Table
+  const studentSummaries = useMemo(() => {
+    const map = new Map();
+    
+    enrollmentFinancials.forEach(item => {
+      if (!map.has(item.student_id)) {
+        map.set(item.student_id, {
+          student_id: item.student_id,
+          studentName: item.studentName,
+          totalCourses: 0,
+          totalBalance: 0,
+          status: 'GOOD',
+          enrollments: []
+        });
+      }
+      const summary = map.get(item.student_id);
+      summary.totalCourses += 1;
+      summary.totalBalance += item.balance;
+      summary.enrollments.push(item);
+      
+      // If any course is overdue, mark student as overdue
+      if (item.balance > 0) summary.status = 'OWING';
+    });
+    
+    return Array.from(map.values());
+  }, [enrollmentFinancials]);
+
+  // --- Handlers ---
+  const handleViewDetails = (studentId) => {
+    setSelectedStudentId(studentId);
+    setShowDetailModal(true);
   };
 
+  const handleMakePayment = (enrollment) => {
+    setFormData(prev => ({ ...prev, enrollment_id: enrollment.id, payment_status: 'PAID', amount: '' }));
+    setMaxAmount(enrollment.balance);
+    setIsPaymentModalOpen(true);
+  };
+
+  // --- Table Columns ---
   const columns = [
     {
       header: 'Student',
       accessorKey: 'studentName',
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-semibold text-sm">
-            {row.studentName.charAt(0).toUpperCase()}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
+            {(row.studentName || '?').charAt(0)}
           </div>
-          <span className="font-medium text-gray-900 dark:text-white">
-            {row.studentName}
-          </span>
+          <div>
+            <div className="font-semibold text-gray-900 dark:text-white">{row.studentName}</div>
+            <div className="text-xs text-gray-500">{row.totalCourses} Active Courses</div>
+          </div>
         </div>
       )
     },
     {
-      header: 'Course',
-      accessorKey: 'courseName',
+      header: 'Total Balance Due',
+      accessorKey: 'totalBalance',
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-purple-500" />
-          <span className="text-gray-700 dark:text-gray-300">
-            {row.courseName}
-          </span>
-        </div>
-      )
-    },
-    {
-      header: 'Total Fee',
-      accessorKey: 'courseFee',
-      cell: (row) => (
-        <div className="flex items-center gap-1">
-          <span className="font-medium text-gray-600 dark:text-gray-400">
-            ${row.courseFee.toFixed(2)}
-          </span>
-        </div>
-      )
-    },
-    {
-      header: 'Paid',
-      accessorKey: 'totalPaid',
-      cell: (row) => (
-        <div className="flex items-center gap-1">
-          <span className="font-medium text-green-600 dark:text-green-400">
-            ${row.totalPaid.toFixed(2)}
-          </span>
-        </div>
-      )
-    },
-    {
-      header: 'Remaining',
-      accessorKey: 'remaining',
-      cell: (row) => (
-        <div className="flex items-center gap-1">
-          <span className="font-semibold text-blue-600 dark:text-blue-400">
-            ${row.remaining.toFixed(2)}
-          </span>
-        </div>
+        <span className={`font-bold ${row.totalBalance > 0 ? 'text-red-500' : 'text-green-500'}`}>
+          ${(row.totalBalance || 0).toFixed(2)}
+        </span>
       )
     },
     {
       header: 'Status',
       accessorKey: 'status',
       cell: (row) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(row.status)}`}>
-          {row.status}
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          row.totalBalance > 0 
+            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+            : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+        }`}>
+          {row.totalBalance > 0 ? 'Payment Due' : 'Up to Date'}
         </span>
       )
     },
     {
-      header: 'Actions',
-      accessorKey: 'actions',
+      header: '',
+      id: 'actions',
       cell: (row) => (
         <button
-          onClick={() => {
-             // Pre-fill form for this enrollment
-             setFormData({
-               enrollment_id: row.enrollment_id,
-               amount: '',
-               payment_status: 'PAID',
-               notes: ''
-             });
-             setIsCreateModalOpen(true);
-          }}
-          disabled={row.remaining <= 0}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-          title="Record Payment"
+          onClick={() => handleViewDetails(row.student_id)}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors font-bold"
         >
-          <DollarSign className="w-4 h-4" />
-          Make Payment
+          &gt;
         </button>
       )
     }
   ];
 
-  // Calculate global stats from summaries
-  const stats = React.useMemo(() => {
-    return {
-      totalRevenue: enrollmentSummaries.reduce((sum, item) => sum + item.totalPaid, 0),
-      totalPending: enrollmentSummaries.reduce((sum, item) => sum + item.remaining, 0),
-      fullyPaidCount: enrollmentSummaries.filter(item => item.status === 'PAID').length,
-      partialCount: enrollmentSummaries.filter(item => item.status === 'PARTIAL').length
-    };
-  }, [enrollmentSummaries]);
+  if (isLoading) return <div className="p-8 text-center">Loading payments...</div>;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const selectedStudentSummary = studentSummaries.find(s => s.student_id === selectedStudentId);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Payment Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track student enrollments and payment status
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Management</h1>
+          <p className="text-gray-500 dark:text-gray-400">Monthly subscription tracking</p>
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm opacity-90">Total Revenue</div>
-            <DollarSign className="w-5 h-5" />
-          </div>
-          <div className="text-3xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
-          <div className="text-xs opacity-75 mt-1">Collected across all courses</div>
-        </div>
-        
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Outstanding Amount</div>
-          <div className="text-2xl font-bold text-yellow-600">${stats.totalPending.toFixed(2)}</div>
-          <div className="text-xs text-gray-500 mt-1">Pending payments</div>
-        </div>
-        
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Fully Paid</div>
-          <div className="text-2xl font-bold text-green-600">{stats.fullyPaidCount}</div>
-          <div className="text-xs text-gray-500 mt-1">Enrollments completed</div>
-        </div>
-        
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Partial</div>
-          <div className="text-2xl font-bold text-orange-600">{stats.partialCount}</div>
-          <div className="text-xs text-gray-500 mt-1">Enrollments in progress</div>
-        </div>
-      </div>
-
-      {/* Enrollments Table */}
-      <Table
-        data={enrollmentSummaries}
-        columns={columns}
-        searchable
-        searchKeys={['studentName', 'courseName']}
+      <Table 
+        data={studentSummaries} 
+        columns={columns} 
+        searchable 
+        searchKeys={SEARCH_KEYS} 
       />
+      {/* 
+      <div className="p-4 bg-gray-100 rounded">
+        DEBUG: Found {studentSummaries.length} students.
+        <pre>{JSON.stringify(studentSummaries.slice(0, 1), null, 2)}</pre>
+      </div>
+      */}
 
-      {/* Create Modal */}
+      {/* Student Details Modal */}
+      {showDetailModal && selectedStudentSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            
+            {/* Header */}
+            <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-start bg-gray-50 dark:bg-slate-900/50">
+              <div className="flex items-center gap-4">
+                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                    {selectedStudentSummary.studentName.charAt(0)}
+                 </div>
+                 <div>
+                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedStudentSummary.studentName}</h2>
+                   <div className="flex gap-2 mt-1">
+                     <span className="px-2 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                       Student
+                     </span>
+                     {selectedStudentSummary.totalBalance > 0 && (
+                       <span className="px-2 py-0.5 rounded text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-bold">
+                         OWING ${selectedStudentSummary.totalBalance.toFixed(2)}
+                       </span>
+                     )}
+                   </div>
+                 </div>
+              </div>
+              <button 
+                onClick={() => setShowDetailModal(false)}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full transition-colors font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              
+              {selectedStudentSummary.enrollments.map((enr) => (
+                <CoursePaymentCard 
+                  key={enr.id} 
+                  enrollment={enr} 
+                  payments={payments} 
+                  onMakePayment={handleMakePayment} 
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
       <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Record New Payment"
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title="Record Payment"
         size="md"
       >
         <PaymentForm
           formData={formData}
           setFormData={setFormData}
-          enrollments={enrollments}
-          students={students}
-          courses={courses}
-          payments={payments}
-          onSubmit={handleSubmitCreate}
-          onCancel={() => {
-            setIsCreateModalOpen(false);
-            resetForm();
+          onSubmit={(e) => {
+            e.preventDefault();
+            createMutation.mutate({ ...formData, payment_status: 'PAID' });
           }}
+          onCancel={() => setIsPaymentModalOpen(false)}
           isLoading={createMutation.isPending}
+          maxAmount={maxAmount}
         />
       </Modal>
+
     </div>
   );
 };
 
-// PaymentForm component
-const PaymentForm = ({ 
-  formData, 
-  setFormData, 
-  enrollments, 
-  students, 
-  courses, 
-  payments,
-  onSubmit, 
-  onCancel, 
-  isLoading 
-}) => {
-  const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [validationError, setValidationError] = useState('');
+// Course Payment Card Component
+const CoursePaymentCard = ({ enrollment, payments, onMakePayment }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Initialize selected student from formData (if pre-filled)
-  React.useEffect(() => {
-    if (formData.enrollment_id) {
-      const enrollment = enrollments.find(e => e.id === formData.enrollment_id);
-      if (enrollment) {
-        setSelectedStudentId(enrollment.student_id);
-      }
-    }
-  }, [formData.enrollment_id, enrollments]);
-
-  // Derived state for financial summary
-  const selectedEnrollment = enrollments.find(e => e.id === formData.enrollment_id);
-  const selectedCourse = selectedEnrollment ? courses.find(c => c.id === selectedEnrollment.course_id) : null;
-  
-  const courseFee = selectedCourse ? selectedCourse.price : 0;
-  
-  // Calculate already paid amount
-  const alreadyPaid = React.useMemo(() => {
-    if (!formData.enrollment_id) return 0;
-    
-    return payments
-      .filter(p => 
-        p.enrollment_id === formData.enrollment_id && 
-        p.payment_status === 'PAID'
-      )
-      .reduce((sum, p) => sum + p.amount, 0);
-  }, [payments, formData.enrollment_id]);
-
-  const remainingBalance = Math.max(0, courseFee - alreadyPaid);
-
-  // Validate amount against remaining balance
-  React.useEffect(() => {
-    if (formData.amount && parseFloat(formData.amount) > remainingBalance) {
-      setValidationError(`Amount exceeds remaining balance of $${remainingBalance.toFixed(2)}`);
-    } else {
-      setValidationError('');
-    }
-  }, [formData.amount, remainingBalance]);
-
-  // Filter enrollments for the selected student
-  const studentEnrollments = React.useMemo(() => {
-    if (!selectedStudentId) return [];
-    return enrollments.filter(e => e.student_id === selectedStudentId);
-  }, [selectedStudentId, enrollments]);
-
-  // Get course name helper
-  const getCourseName = (courseId) => {
-    const course = courses.find(c => c.id === courseId);
-    return course ? course.name : 'Unknown Course';
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (parseFloat(formData.amount) > remainingBalance) {
-      return; 
-    }
-    // Force status to PAID
-    setFormData(prev => ({ ...prev, payment_status: 'PAID' }));
-    onSubmit(e);
-  };
+  // Filter payments for this specific enrollment
+  const coursePayments = payments
+    .filter(p => p.enrollment_id === enrollment.id)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Student Selection */}
-      <Select
-        label="Student"
-        required
-        value={selectedStudentId}
-        onChange={(e) => {
-          setSelectedStudentId(e.target.value);
-          setFormData({ ...formData, enrollment_id: '' });
-        }}
-        options={[
-          { value: '', label: 'Select Student' },
-          ...students.map(student => ({
-            value: student.id,
-            label: student.full_name
-          }))
-        ]}
-      />
-
-      {/* Course Selection (Filtered by Student) */}
-      <Select
-        label="Course"
-        required
-        value={formData.enrollment_id}
-        onChange={(e) => setFormData({ ...formData, enrollment_id: e.target.value })}
-        options={[
-          { value: '', label: 'Select Course' },
-          ...studentEnrollments.map(enrollment => ({
-            value: enrollment.id,
-            label: getCourseName(enrollment.course_id)
-          }))
-        ]}
-        disabled={!selectedStudentId}
-      />
-
-      {/* Payment Summary */}
-      {selectedCourse && (
-        <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Total Course Fee:</span>
-            <span className="font-semibold text-gray-900 dark:text-white">${courseFee.toFixed(2)}</span>
+    <div className="bg-gray-50 dark:bg-slate-700/30 rounded-xl border border-gray-200 dark:border-slate-600 overflow-hidden transition-all duration-200">
+      
+      {/* Course Header - Always Visible */}
+      <div 
+        className="p-4 border-b border-gray-200 dark:border-slate-600 flex justify-between items-center bg-white dark:bg-slate-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-750 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400 font-bold">
+            {isExpanded ? '▼' : '▶'}
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Already Paid:</span>
-            <span className="font-semibold text-green-600">${alreadyPaid.toFixed(2)}</span>
+          <div>
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white">{enrollment.courseName}</h3>
+            {!isExpanded && (
+              <p className="text-xs text-gray-500">
+                 Monthly: ${enrollment.monthlyPrice}/mo • Balance: <span className={enrollment.balance > 0 ? 'text-red-500 font-bold' : 'text-green-500'}>${enrollment.balance.toFixed(2)}</span>
+              </p>
+            )}
+            {isExpanded && (
+               <p className="text-xs text-gray-500">Enrolled: {enrollment.enrollmentDate.toLocaleDateString()}</p>
+            )}
           </div>
-          <div className="flex justify-between border-t border-gray-200 dark:border-slate-700 pt-2 mt-2">
-            <span className="font-medium text-gray-900 dark:text-white">Remaining Balance:</span>
-            <span className="font-bold text-blue-600">${remainingBalance.toFixed(2)}</span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+           {/* Summary in header when collapsed */}
+           {!isExpanded && (
+              <div className="text-right">
+                <span className={`px-2 py-1 rounded text-xs font-bold ${enrollment.balance > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                  {enrollment.balance > 0 ? 'Due' : 'Paid'}
+                </span>
+              </div>
+           )}
+           
+           {/* Detailed header info when expanded */}
+           {isExpanded && (
+             <div className="text-right">
+                <div className="text-sm text-gray-500">Monthly Fee</div>
+                <div className="font-bold text-gray-900 dark:text-white">${enrollment.monthlyPrice}/mo</div>
+             </div>
+           )}
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      {isExpanded && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Financial Breakdown */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <div className="text-sm text-gray-500 mb-1">Duration</div>
+              <div className="text-xl font-semibold text-gray-900 dark:text-white">{enrollment.monthsEnrolled} Months</div>
+              <div className="text-xs text-gray-400">Since enrollment</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500 mb-1">Total Expected</div>
+              <div className="text-xl font-semibold text-gray-900 dark:text-white">${enrollment.totalExpected.toFixed(2)}</div>
+              <div className="text-xs text-gray-400">{enrollment.monthsEnrolled} x ${enrollment.monthlyPrice}</div>
+            </div>
+             <div>
+              <div className="text-sm text-gray-500 mb-1">Balance Due</div>
+              <div className={`text-2xl font-bold ${enrollment.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                ${enrollment.balance.toFixed(2)}
+              </div>
+              <button 
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   onMakePayment(enrollment);
+                 }}
+                 className="mt-2 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors w-full flex items-center justify-center gap-2 shadow-sm"
+              >
+                $ Pay Now
+              </button>
+            </div>
+          </div>
+
+          {/* Payment History for this Course */}
+          <div className="px-6 pb-6">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">Payment History</h4>
+            <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+               {coursePayments.length === 0 ? (
+                 <div className="text-sm text-gray-400 italic p-2 text-center bg-gray-50 dark:bg-slate-800 rounded">No payments recorded yet.</div>
+               ) : (
+                 coursePayments.map(pay => (
+                   <div key={pay.id} className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm gap-4">
+                      {/* Date */}
+                      <div className="flex items-center gap-3 shrink-0">
+                         <div className={`w-2 h-2 rounded-full ${pay.payment_status === 'PAID' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                           {new Date(pay.created_at).toLocaleDateString()}
+                         </span>
+                      </div>
+                      
+                      {/* Notes - Middle */}
+                      <div className="flex-1 px-4 text-center">
+                        {pay.notes && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 italic truncate block" title={pay.notes}>
+                                {pay.notes}
+                            </span>
+                        )}
+                      </div>
+
+                      {/* Amount */}
+                      <div className="font-bold text-gray-900 dark:text-white shrink-0">
+                        ${pay.amount}
+                      </div>
+                   </div>
+                 ))
+               )}
+            </div>
           </div>
         </div>
       )}
-
-      <div className="space-y-1">
-        <Input
-          label="Payment Amount ($)"
-          type="number"
-          required
-          value={formData.amount}
-          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-          min="0"
-          max={remainingBalance}
-          step="0.01"
-          placeholder="0.00"
-          className={validationError ? "border-red-500 focus:ring-red-500" : ""}
-        />
-        {validationError && (
-          <p className="text-xs text-red-500">{validationError}</p>
-        )}
-      </div>
-
-      <TextArea
-        label="Notes (optional)"
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-        placeholder="Additional notes about this payment..."
-        rows={3}
-      />
-
-      <div className="flex justify-end gap-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-          disabled={isLoading}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading || !!validationError}
-          className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {isLoading && (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          )}
-          {isLoading ? 'Saving...' : 'Save Payment'}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
+
+// Simple Payment Form
+const PaymentForm = ({ formData, setFormData, onSubmit, onCancel, isLoading, maxAmount }) => (
+  <form onSubmit={onSubmit} className="space-y-4">
+    <Input
+      label={`Amount ($) Max ${maxAmount.toFixed(2)}`}
+      type="number"
+      required
+      value={formData.amount}
+      onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+      min="0.01" 
+      max={maxAmount}
+      step="0.01"
+      autoFocus
+    />
+    <TextArea
+      label="Notes"
+      value={formData.notes}
+      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+      placeholder="e.g. September Payment"
+    />
+    <div className="flex justify-end gap-3 pt-4">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 dark:text-gray-300"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        disabled={isLoading || (formData.amount > maxAmount)}
+        className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Saving...' : 'Record Payment'}
+      </button>
+    </div>
+  </form>
+);
 
 export default Payments;

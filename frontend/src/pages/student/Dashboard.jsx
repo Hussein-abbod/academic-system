@@ -6,7 +6,6 @@ import Card from '../../components/ui/Card';
 import { 
   BookOpen, 
   CheckCircle, 
-  TrendingUp, 
   Target,
   Sparkles,
   Clock,
@@ -53,18 +52,7 @@ const Dashboard = () => {
       iconColor: 'text-teal-600 dark:text-teal-400',
       description: 'Courses finished',
     },
-    {
-      title: 'Progress',
-      value: `${stats?.average_progress || 0}%`,
-      icon: TrendingUp,
-      gradient: 'from-pink-500 to-rose-600',
-      bgLight: 'bg-pink-50 dark:bg-pink-900/20',
-      iconColor: 'text-pink-600 dark:text-pink-400',
-      description: 'Average completion',
-    },
   ];
-
-  const progressPercentage = stats?.average_progress || 0;
 
   return (
     <div className="space-y-8">
@@ -84,7 +72,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -124,102 +112,15 @@ const Dashboard = () => {
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Learning Progress */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Card title="Overall Progress" hover={false}>
-            <div className="space-y-6">
-              {/* Circular Progress */}
-              <div className="flex items-center justify-center py-6">
-                <div className="relative w-40 h-40">
-                  {/* Background circle */}
-                  <svg className="w-40 h-40 transform -rotate-90">
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      fill="none"
-                      className="text-gray-200 dark:text-slate-700"
-                    />
-                    {/* Progress circle */}
-                    <motion.circle
-                      cx="80"
-                      cy="80"
-                      r="70"
-                      stroke="url(#gradient)"
-                      strokeWidth="12"
-                      fill="none"
-                      strokeLinecap="round"
-                      initial={{ strokeDashoffset: 440 }}
-                      animate={{ strokeDashoffset: 440 - (440 * progressPercentage) / 100 }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                      style={{
-                        strokeDasharray: 440,
-                      }}
-                    />
-                    <defs>
-                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#6366f1" />
-                        <stop offset="100%" stopColor="#ec4899" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  {/* Center text */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                        className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 dark:from-indigo-400 dark:to-pink-400 bg-clip-text text-transparent"
-                      >
-                        {progressPercentage}%
-                      </motion.div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Complete</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Details */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active Courses</span>
-                  </div>
-                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                    {stats?.active_courses || 0}
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Completed</span>
-                  </div>
-                  <span className="text-sm font-bold text-teal-600 dark:text-teal-400">
-                    {stats?.completed_courses || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* Quick Actions */}
+        {/* Quick Actions - Moved to first column since Progress is gone */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
+          className="lg:col-span-2" 
         >
           <Card title="Quick Actions" hover={false}>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <motion.a
                 href="/student/courses"
                 whileHover={{ x: 4 }}
@@ -259,7 +160,7 @@ const Dashboard = () => {
               className="mt-6 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800"
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-100/10">
                   <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>

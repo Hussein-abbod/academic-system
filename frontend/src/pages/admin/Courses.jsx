@@ -210,7 +210,7 @@ const Courses = () => {
       )
     },
     {
-      header: 'Price',
+      header: 'Monthly Price',
       accessorKey: 'price',
       cell: (row) => <span className="font-semibold text-green-600 dark:text-green-400">${row.price}</span>
     },
@@ -398,7 +398,7 @@ const CourseForm = ({ formData, setFormData, levels, teachers, onSubmit, onCance
       />
 
       <Input
-        label="Price ($)"
+        label="Monthly Price ($)"
         type="number"
         required
         value={formData.price}

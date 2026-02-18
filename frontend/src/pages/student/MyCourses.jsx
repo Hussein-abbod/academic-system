@@ -46,25 +46,8 @@ const MyCourses = () => {
             </p>
 
             <div className="space-y-4">
-              <div className="relative pt-1">
-                <div className="flex mb-2 items-center justify-between">
-                  <div>
-                    <span className="text-xs font-semibold inline-block text-blue-600 dark:text-blue-400">
-                      Progress
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-semibold inline-block text-blue-600 dark:text-blue-400">
-                      {enrollment.current_progress}%
-                    </span>
-                  </div>
-                </div>
-                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200 dark:bg-blue-900/30">
-                  <div 
-                    style={{ width: `${enrollment.current_progress}%` }} 
-                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
-                  ></div>
-                </div>
+              <div className="relative pt-1 space-y-2">
+                {/* Progress bar removed */}
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">

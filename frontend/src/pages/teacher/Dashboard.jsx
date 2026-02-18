@@ -77,7 +77,7 @@ const Dashboard = () => {
         </h1>
         <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
           <Award className="w-4 h-4" />
-          Manage your courses and track student progress
+          Manage your courses
         </p>
       </motion.div>
 
@@ -202,7 +202,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 dark:text-white">View Students</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Track student progress</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">View enrolled students</p>
                 </div>
                 <TrendingUp className="w-4 h-4 text-gray-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" />
               </motion.a>

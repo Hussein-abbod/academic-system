@@ -16,8 +16,7 @@ const Enrollments = () => {
   const [formData, setFormData] = useState({
     student_id: '',
     course_id: '',
-    status: 'ACTIVE',
-    current_progress: 0
+    status: 'ACTIVE'
   });
 
   const queryClient = useQueryClient();
@@ -120,8 +119,7 @@ const Enrollments = () => {
     setFormData({
       student_id: '',
       course_id: '',
-      status: 'ACTIVE',
-      current_progress: 0
+      status: 'ACTIVE'
     });
   };
 
@@ -135,8 +133,7 @@ const Enrollments = () => {
     setFormData({
       student_id: enrollment.student_id,
       course_id: enrollment.course_id,
-      status: enrollment.status,
-      current_progress: enrollment.current_progress || 0
+      status: enrollment.status
     });
     setIsEditModalOpen(true);
   };
@@ -158,10 +155,9 @@ const Enrollments = () => {
 
   const handleSubmitEdit = (e) => {
     e.preventDefault();
-    // Backend only accepts status and current_progress for updates
+    // Backend only accepts status for updates (progress removed)
     const submitData = {
-      status: formData.status,
-      current_progress: formData.current_progress
+      status: formData.status
     };
     updateMutation.mutate({ id: selectedEnrollment.id, data: submitData });
   };
@@ -218,21 +214,6 @@ const Enrollments = () => {
           <span className="text-gray-700 dark:text-gray-300">
             {getCourseName(row.course_id)}
           </span>
-        </div>
-      )
-    },
-    {
-      header: 'Progress',
-      accessorKey: 'current_progress',
-      cell: (row) => (
-        <div className="flex items-center gap-2">
-          <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${row.current_progress || 0}%` }}
-            />
-          </div>
-          <span className="text-sm font-medium">{row.current_progress || 0}%</span>
         </div>
       )
     },

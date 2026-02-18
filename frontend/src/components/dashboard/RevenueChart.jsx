@@ -1,234 +1,196 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { DollarSign, TrendingUp, CreditCard, Clock } from 'lucide-react';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Legend 
+} from 'recharts';
+import { DollarSign, TrendingUp, Calendar, Filter } from 'lucide-react';
 import api from '../../utils/api';
+import Card from '../ui/Card';
 
 const RevenueChart = () => {
-  const [chartType, setChartType] = React.useState('line'); // 'line' or 'bar'
+  const [period, setPeriod] = useState('6m'); // '30d', '6m', '1y', 'all'
 
-  // Fetch revenue statistics
-  const { data: revenueData, isLoading } = useQuery({
-    queryKey: ['admin-revenue-stats'],
+  // Fetch aggregated revenue data
+  const { data: chartData = [], isLoading: isChartLoading } = useQuery({
+    queryKey: ['admin-revenue-chart', period],
     queryFn: async () => {
-      const response = await api.get('/admin/statistics/revenue');
+      const response = await api.get('/admin/statistics/revenue-chart', {
+        params: { period }
+      });
       return response.data;
     }
   });
 
-  // Fetch payments for detailed analysis
-  const { data: payments = [] } = useQuery({
-    queryKey: ['admin-payments'],
+  // Fetch summary statistics (keep existing total/this month logic or move to backend)
+  // For now, let's assume the dashboard parent component passes stats or we fetch them here
+  // But to align with the request "enhance overview", we probably just want the chart here 
+  // and maybe some quick stats derived from it or a separate call.
+  // The original component had stats cards inside. Let's keep them but maybe simplify 
+  // or fetch them from the main dashboard stats endpoint to avoid duplication if possible.
+  // However, to keep this component self-contained as requested, we might want to fetch stats here too.
+  // But the user request specifically asked to "enhance Revenue Overview", implies the chart+stats block.
+  // Let's call the dashboard stats endpoint to get the summary numbers if we want to show them here,
+  // OR just calculate totals from the returned chart data for the selected period?
+  // No, totals should probably be overall.
+  // Let's stick to the pattern: This component handles the Chart visualization.
+  // The stats cards in the original code were useful. Let's keep them, but maybe fetch them via the dashboard stats endpoint
+  // strictly for the "Total" values, or just calculate "Revenue in selected period".
+  
+  // Actually, the previous implementation fetched ALL payments to calculate stats.
+  // We should probably rely on the dashboard stats for "Total Revenue" and "This Month".
+  // But if we want to show stats specific to the chart range, we can calculate from chartData.
+  
+  const totalInPeriod = React.useMemo(() => {
+    return chartData.reduce((acc, curr) => acc + curr.amount, 0);
+  }, [chartData]);
+
+  // We can also fetch the general stats separately if we want to show "All Time" vs "Selected Period"
+  const { data: generalStats } = useQuery({
+    queryKey: ['admin-revenue-stats-general'],
     queryFn: async () => {
-      const response = await api.get('/admin/payments');
+      const response = await api.get('/admin/statistics/dashboard');
       return response.data;
     }
   });
 
-  // Process monthly revenue data
-  const monthlyData = React.useMemo(() => {
-    if (!payments.length) return [];
-
-    const monthlyRevenue = {};
-    const now = new Date();
-    
-    // Initialize last 6 months
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyRevenue[key] = { month: date.toLocaleDateString('en-US', { month: 'short' }), amount: 0 };
-    }
-
-    // Aggregate payments by month
-    payments.forEach(payment => {
-      if (payment.status === 'PAID' && payment.payment_date) {
-        const date = new Date(payment.payment_date);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (monthlyRevenue[key]) {
-          monthlyRevenue[key].amount += parseFloat(payment.amount);
-        }
-      }
-    });
-
-    return Object.values(monthlyRevenue);
-  }, [payments]);
-
-  // Calculate statistics
-  const stats = React.useMemo(() => {
-    const totalRevenue = payments
-      .filter(p => p.status === 'PAID')
-      .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-    const pendingAmount = payments
-      .filter(p => p.status === 'PENDING')
-      .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-    const thisMonth = new Date();
-    const thisMonthRevenue = payments
-      .filter(p => {
-        if (p.status !== 'PAID' || !p.payment_date) return false;
-        const paymentDate = new Date(p.payment_date);
-        return paymentDate.getMonth() === thisMonth.getMonth() &&
-               paymentDate.getFullYear() === thisMonth.getFullYear();
-      })
-      .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-    const avgPayment = payments.length > 0 ? totalRevenue / payments.filter(p => p.status === 'PAID').length : 0;
-
-    return {
-      total: totalRevenue,
-      thisMonth: thisMonthRevenue,
-      pending: pendingAmount,
-      average: avgPayment
-    };
-  }, [payments]);
-
-  if (isLoading) {
+  if (isChartLoading) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/3"></div>
-          <div className="h-64 bg-gray-200 dark:bg-slate-700 rounded"></div>
-        </div>
-      </div>
+      <Card className="h-96 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </Card>
     );
   }
 
+  const formatCurrency = (value) => 
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+
+  const formatDate = (dateStr) => {
+    // dateStr is 'YYYY-MM'
+    const [year, month] = dateStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+  };
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Revenue Overview</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setChartType('line')}
-            className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-              chartType === 'line'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
-            }`}
-          >
-            Line
-          </button>
-          <button
-            onClick={() => setChartType('bar')}
-            className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-              chartType === 'bar'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
-            }`}
-          >
-            Bar
-          </button>
+    <div className="space-y-6">
+      {/* Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <DollarSign className="w-6 h-6 text-green-500" />
+            Revenue Analysis
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Track financial performance over time
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2 bg-gray-100 dark:bg-slate-700/50 p-1 rounded-lg">
+          {['30d', '6m', '1y', 'all'].map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                period === p
+                  ? 'bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              {p === '30d' ? '30 Days' : p === '6m' ? '6 Months' : p === '1y' ? '1 Year' : 'All Time'}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Total Revenue</span>
-          </div>
-          <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-            ${stats.total.toFixed(2)}
-          </div>
+      {/* Summary Cards for Selected Period */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-100 dark:border-green-800/30">
+          <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
+            <Calendar className="w-3 h-3" /> Period Revenue
+          </p>
+          <h3 className="text-2xl font-bold text-green-700 dark:text-green-300">
+            {formatCurrency(totalInPeriod)}
+          </h3>
         </div>
 
-        <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-800">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
-            <span className="text-xs text-green-600 dark:text-green-400 font-medium">This Month</span>
-          </div>
-          <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-            ${stats.thisMonth.toFixed(2)}
-          </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/30">
+          <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
+            <DollarSign className="w-3 h-3" /> Total All Time
+          </p>
+          <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+            {formatCurrency(generalStats?.total_revenue || 0)}
+          </h3>
         </div>
 
-        <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-            <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Pending</span>
-          </div>
-          <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-            ${stats.pending.toFixed(2)}
-          </div>
-        </div>
-
-        <div className="p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800">
-          <div className="flex items-center gap-2 mb-2">
-            <CreditCard className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">Avg Payment</span>
-          </div>
-          <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-            ${stats.average.toFixed(2)}
-          </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 border border-purple-100 dark:border-purple-800/30">
+          <p className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1 flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" /> Monthly Average
+          </p>
+          <h3 className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+             {chartData.length > 0 
+               ? formatCurrency(totalInPeriod / chartData.length) 
+               : '$0.00'}
+          </h3>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === 'line' ? (
-            <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-slate-700" />
+      <Card className="p-1">
+        <div className="h-[300px] w-full mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" className="dark:stroke-slate-700" />
               <XAxis 
-                dataKey="month" 
-                className="text-xs text-gray-600 dark:text-gray-400"
+                dataKey="date" 
+                tickFormatter={formatDate}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+                dy={10}
               />
               <YAxis 
-                className="text-xs text-gray-600 dark:text-gray-400"
                 tickFormatter={(value) => `$${value}`}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
               />
               <Tooltip 
+                cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '3 3' }}
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                 }}
-                formatter={(value) => [`$${value.toFixed(2)}`, 'Revenue']}
+                formatter={(value) => [formatCurrency(value), 'Revenue']}
+                labelFormatter={(label) => formatDate(label)}
               />
-              <Legend />
-              <Line 
+              <Area 
                 type="monotone" 
                 dataKey="amount" 
-                stroke="#3b82f6" 
-                strokeWidth={2}
-                dot={{ fill: '#3b82f6', r: 4 }}
-                activeDot={{ r: 6 }}
-                name="Revenue"
+                stroke="#10b981" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorRevenue)" 
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
-            </LineChart>
-          ) : (
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-slate-700" />
-              <XAxis 
-                dataKey="month" 
-                className="text-xs text-gray-600 dark:text-gray-400"
-              />
-              <YAxis 
-                className="text-xs text-gray-600 dark:text-gray-400"
-                tickFormatter={(value) => `$${value}`}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
-                }}
-                formatter={(value) => [`$${value.toFixed(2)}`, 'Revenue']}
-              />
-              <Legend />
-              <Bar 
-                dataKey="amount" 
-                fill="#3b82f6" 
-                radius={[8, 8, 0, 0]}
-                name="Revenue"
-              />
-            </BarChart>
-          )}
-        </ResponsiveContainer>
-      </div>
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
     </div>
   );
 };

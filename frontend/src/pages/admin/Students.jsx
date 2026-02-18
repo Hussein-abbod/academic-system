@@ -147,11 +147,8 @@ const Students = () => {
     const studentEnrollments = enrollments.filter(e => e.student_id === studentId);
     const activeCount = studentEnrollments.filter(e => e.status === 'ACTIVE').length;
     const completedCount = studentEnrollments.filter(e => e.status === 'COMPLETED').length;
-    const avgProgress = studentEnrollments.length > 0
-      ? studentEnrollments.reduce((sum, e) => sum + (e.current_progress || 0), 0) / studentEnrollments.length
-      : 0;
     
-    return { total: studentEnrollments.length, active: activeCount, completed: completedCount, avgProgress };
+    return { total: studentEnrollments.length, active: activeCount, completed: completedCount };
   };
 
   const columns = [
@@ -187,24 +184,6 @@ const Students = () => {
             <span className="text-xs text-gray-500">
               ({stats.active} active, {stats.completed} completed)
             </span>
-          </div>
-        );
-      }
-    },
-    {
-      header: 'Avg Progress',
-      accessorKey: 'progress',
-      cell: (row) => {
-        const stats = getStudentStats(row.id);
-        return (
-          <div className="flex items-center gap-2">
-            <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${stats.avgProgress}%` }}
-              />
-            </div>
-            <span className="text-sm font-medium">{Math.round(stats.avgProgress)}%</span>
           </div>
         );
       }

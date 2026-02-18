@@ -62,23 +62,6 @@ const MyStudents = () => {
         accessorKey: 'enrollment_date',
         cell: (row) => new Date(row.enrollment_date).toLocaleDateString(),
         },
-        {
-        header: 'Progress',
-        accessorKey: 'current_progress',
-        cell: (row) => (
-            <div className="w-full max-w-[140px]">
-            <div className="flex justify-between text-xs mb-1">
-                <span>{row.current_progress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                <div 
-                className="bg-cosmic-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${row.current_progress}%` }}
-                ></div>
-            </div>
-            </div>
-        ),
-        },
     ];
 
     if (isLoading) return <div>Loading students...</div>;

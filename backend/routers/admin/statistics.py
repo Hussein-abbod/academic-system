@@ -105,3 +105,41 @@ async def get_student_statistics(db: Session = Depends(get_db)):
             for status, count in enrollments_by_status
         ]
     }
+
+
+@router.get("/revenue-chart", dependencies=[Depends(require_admin)])
+async def get_revenue_chart_data(period: str = "6m", db: Session = Depends(get_db)):
+    """Get revenue chart data aggregated by time"""
+    from datetime import datetime, timedelta
+    
+    # Calculate start date based on period
+    now = datetime.utcnow()
+    if period == "1y":
+        start_date = now - timedelta(days=365)
+    elif period == "30d":
+        start_date = now - timedelta(days=30)
+    elif period == "all":
+        start_date = datetime.min
+    else:  # Default to 6m
+        start_date = now - timedelta(days=180)
+        
+    # Aggregate revenue by month (using SQLite compatible strftime)
+    # Note: For proper DB independence, this should be dialect-aware, 
+    # but using strftime is safe for SQLite which is the default here.
+    revenue_data = db.query(
+        func.strftime('%Y-%m', Payment.payment_date).label("month"),
+        func.sum(Payment.amount).label("total")
+    ).filter(
+        Payment.payment_status == PaymentStatus.PAID,
+        Payment.payment_date >= start_date
+    ).group_by(
+        func.strftime('%Y-%m', Payment.payment_date)
+    ).order_by(
+        func.strftime('%Y-%m', Payment.payment_date)
+    ).all()
+    
+    # Format for frontend
+    return [
+        {"date": month, "amount": float(total or 0)}
+        for month, total in revenue_data
+    ]

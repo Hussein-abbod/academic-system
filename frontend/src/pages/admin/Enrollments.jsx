@@ -338,6 +338,7 @@ const Enrollments = () => {
           setFormData={setFormData}
           students={students}
           courses={courses}
+          enrollments={enrollments} // Pass enrollments to filtering logic
           onSubmit={handleSubmitCreate}
           onCancel={() => {
             setIsCreateModalOpen(false);
@@ -394,34 +395,49 @@ const Enrollments = () => {
 };
 
 // EnrollmentForm component
-const EnrollmentForm = ({ formData, setFormData, students, courses, onSubmit, onCancel, isLoading, isEdit }) => (
-  <form onSubmit={onSubmit} className="space-y-4">
-    <Select
-      label="Student"
-      required
-      value={formData.student_id}
-      onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-      options={[
-        { value: '', label: 'Select Student' },
-        ...students.map(student => ({ value: student.id, label: student.full_name }))
-      ]}
-      disabled={isEdit}
-    />
+const EnrollmentForm = ({ formData, setFormData, students, courses, enrollments = [], onSubmit, onCancel, isLoading, isEdit }) => {
+  
+  // Filter courses that the selected student is already enrolled in
+  const availableCourses = React.useMemo(() => {
+    if (isEdit || !formData.student_id) return courses;
+    
+    const enrolledCourseIds = enrollments
+      .filter(e => e.student_id === formData.student_id)
+      .map(e => e.course_id);
+      
+    return courses.filter(course => !enrolledCourseIds.includes(course.id));
+  }, [courses, enrollments, formData.student_id, isEdit]);
 
-    <Select
-      label="Course"
-      required
-      value={formData.course_id}
-      onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
-      options={[
-        { value: '', label: 'Select Course' },
-        ...courses.map(course => ({ value: course.id, label: course.name }))
-      ]}
-      disabled={isEdit}
-    />
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      {!isEdit && (
+        <>
+          <Select
+            label="Student"
+            required
+            value={formData.student_id}
+            onChange={(e) => setFormData({ ...formData, student_id: e.target.value, course_id: '' })}
+            options={[
+              { value: '', label: 'Select Student' },
+              ...students.map(student => ({ value: student.id, label: student.full_name }))
+            ]}
+          />
 
-    {isEdit && (
-      <>
+          <Select
+            label="Course"
+            required
+            value={formData.course_id}
+            onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
+            options={[
+              { value: '', label: 'Select Course' },
+              ...availableCourses.map(course => ({ value: course.id, label: course.name }))
+            ]}
+            disabled={!formData.student_id}
+          />
+        </>
+      )}
+
+      {isEdit && (
         <Select
           label="Status"
           required
@@ -433,39 +449,30 @@ const EnrollmentForm = ({ formData, setFormData, students, courses, onSubmit, on
             { value: 'DROPPED', label: 'Dropped' }
           ]}
         />
+      )}
 
-        <Input
-          label="Progress (%)"
-          type="number"
-          value={formData.current_progress}
-          onChange={(e) => setFormData({ ...formData, current_progress: parseInt(e.target.value) || 0 })}
-          min="0"
-          max="100"
-        />
-      </>
-    )}
-
-    <div className="flex justify-end gap-3 pt-4">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-        disabled={isLoading}
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-      >
-        {isLoading && (
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        )}
-        {isLoading ? 'Saving...' : (isEdit ? 'Update Enrollment' : 'Enroll Student')}
-      </button>
-    </div>
-  </form>
-);
+      <div className="flex justify-end gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+          disabled={isLoading}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {isLoading && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          )}
+          {isLoading ? 'Saving...' : (isEdit ? 'Update Enrollment' : 'Enroll Student')}
+        </button>
+      </div>
+    </form>
+  );
+};
 
 export default Enrollments;

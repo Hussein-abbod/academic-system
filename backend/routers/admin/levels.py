@@ -22,7 +22,7 @@ async def create_level(level_data: LevelCreate, db: Session = Depends(get_db)):
         "name": new_level.name,
         "description": new_level.description,
         "order": new_level.order,
-        "passing_score": float(new_level.passing_score) if new_level.passing_score else None
+        "passing_score_requirement": float(new_level.passing_score_requirement) if new_level.passing_score_requirement else None
     }
 
 
@@ -36,7 +36,7 @@ async def list_levels(db: Session = Depends(get_db)):
             "name": level.name,
             "description": level.description,
             "order": level.order,
-            "passing_score": float(level.passing_score) if level.passing_score else None
+            "passing_score_requirement": float(level.passing_score_requirement) if level.passing_score_requirement else None
         }
         for level in levels
     ]
@@ -56,7 +56,7 @@ async def get_level(level_id: str, db: Session = Depends(get_db)):
         "name": level.name,
         "description": level.description,
         "order": level.order,
-        "passing_score": float(level.passing_score) if level.passing_score else None
+        "passing_score_requirement": float(level.passing_score_requirement) if level.passing_score_requirement else None
     }
 
 
@@ -83,7 +83,7 @@ async def update_level(level_id: str, level_data: LevelUpdate, db: Session = Dep
         "name": level.name,
         "description": level.description,
         "order": level.order,
-        "passing_score": float(level.passing_score) if level.passing_score else None
+        "passing_score_requirement": float(level.passing_score_requirement) if level.passing_score_requirement else None
     }
 
 

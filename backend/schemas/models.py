@@ -39,6 +39,8 @@ class CourseCreate(BaseModel):
     capacity: int = 20
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
     price: float
 
 
@@ -51,6 +53,8 @@ class CourseUpdate(BaseModel):
     capacity: Optional[int] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
     price: Optional[float] = None
     is_active: Optional[bool] = None
 
@@ -65,6 +69,8 @@ class CourseResponse(BaseModel):
     capacity: int
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
     price: float
     is_active: bool
     level: Optional[LevelResponse] = None
@@ -93,6 +99,8 @@ class EnrollmentResponse(BaseModel):
     enrollment_date: str
     status: str
     current_progress: float
+    course_name: Optional[str] = None
+    course_price: Optional[float] = None
     
     class Config:
         from_attributes = True
@@ -122,6 +130,7 @@ class PaymentResponse(BaseModel):
     payment_date: Optional[datetime] = None
     notes: Optional[str] = None
     created_at: datetime
+    course_name: Optional[str] = None
     
     class Config:
         from_attributes = True

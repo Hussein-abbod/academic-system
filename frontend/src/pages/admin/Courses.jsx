@@ -19,8 +19,8 @@ const Courses = () => {
     level_id: '',
     teacher_id: '',
     capacity: 20,
-    start_date: '',
-    end_date: '',
+    start_time: '',
+    end_time: '',
     price: 0,
     is_active: true
   });
@@ -112,8 +112,8 @@ const Courses = () => {
       level_id: '',
       teacher_id: '',
       capacity: 20,
-      start_date: '',
-      end_date: '',
+      start_time: '',
+      end_time: '',
       price: 0,
       is_active: true
     });
@@ -132,8 +132,8 @@ const Courses = () => {
       level_id: course.level_id,
       teacher_id: course.teacher_id || '',
       capacity: course.capacity,
-      start_date: course.start_date || '',
-      end_date: course.end_date || '',
+      start_time: course.start_time || '',
+      end_time: course.end_time || '',
       price: course.price,
       is_active: course.is_active
     });
@@ -149,8 +149,8 @@ const Courses = () => {
     e.preventDefault();
     const submitData = { ...formData };
     if (!submitData.teacher_id) delete submitData.teacher_id;
-    if (!submitData.start_date) delete submitData.start_date;
-    if (!submitData.end_date) delete submitData.end_date;
+    if (!submitData.start_time) delete submitData.start_time;
+    if (!submitData.end_time) delete submitData.end_time;
     createMutation.mutate(submitData);
   };
 
@@ -158,8 +158,8 @@ const Courses = () => {
     e.preventDefault();
     const submitData = { ...formData };
     if (!submitData.teacher_id) delete submitData.teacher_id;
-    if (!submitData.start_date) delete submitData.start_date;
-    if (!submitData.end_date) delete submitData.end_date;
+    if (!submitData.start_time) delete submitData.start_time;
+    if (!submitData.end_time) delete submitData.end_time;
     updateMutation.mutate({ id: selectedCourse.id, data: submitData });
   };
 
@@ -199,6 +199,15 @@ const Courses = () => {
       header: 'Capacity',
       accessorKey: 'capacity',
       cell: (row) => <span>{row.capacity} students</span>
+    },
+    {
+      header: 'Time',
+      accessorKey: 'start_time',
+      cell: (row) => (
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          {row.start_time && row.end_time ? `${row.start_time} - ${row.end_time}` : 'Flexible'}
+        </span>
+      )
     },
     {
       header: 'Price',
@@ -401,17 +410,17 @@ const CourseForm = ({ formData, setFormData, levels, teachers, onSubmit, onCance
 
     <div className="grid grid-cols-2 gap-4">
       <Input
-        label="Start Date"
-        type="date"
-        value={formData.start_date}
-        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+        label="Start Time"
+        type="time"
+        value={formData.start_time}
+        onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
       />
 
       <Input
-        label="End Date"
-        type="date"
-        value={formData.end_date}
-        onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+        label="End Time"
+        type="time"
+        value={formData.end_time}
+        onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
       />
     </div>
 

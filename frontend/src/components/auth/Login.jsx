@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { LogIn, Mail, Lock, UserCircle } from 'lucide-react';
+import { LogIn, Mail, Lock, UserCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Login = () => {
@@ -14,6 +14,7 @@ const Login = () => {
     role: 'ADMIN'
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -125,13 +126,20 @@ const Login = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-cosmic-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cosmic-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                  className="w-full pl-11 pr-10 py-3 bg-gray-50 dark:bg-cosmic-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cosmic-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
                   placeholder="••••••••"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 

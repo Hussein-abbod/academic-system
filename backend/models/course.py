@@ -17,6 +17,8 @@ class Course(Base):
     capacity = Column(Integer, default=20, nullable=False)  # Maximum students
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
+    start_time = Column(String(10), nullable=True)
+    end_time = Column(String(10), nullable=True)
     price = Column(Numeric(10, 2), nullable=False, default=0.00)
     is_active = Column(Boolean, default=True, nullable=False)
     

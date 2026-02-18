@@ -12,6 +12,33 @@ router = APIRouter(prefix="/admin/enrollments", tags=["Admin - Enrollments"])
 @router.post("", response_model=EnrollmentResponse, dependencies=[Depends(require_admin)])
 async def create_enrollment(enrollment_data: EnrollmentCreate, db: Session = Depends(get_db)):
     """Enroll a student in a course"""
+    # Check if enrollment already exists
+    existing_enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == enrollment_data.student_id,
+        Enrollment.course_id == enrollment_data.course_id
+    ).first()
+    
+    if existing_enrollment:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Student is already enrolled in this course"
+        )
+
+    # Check if course is active
+    from models.course import Course
+    course = db.query(Course).filter(Course.id == enrollment_data.course_id).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    if not course.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot enroll in an inactive course"
+        )
+
     new_enrollment = Enrollment(**enrollment_data.model_dump())
     db.add(new_enrollment)
     db.commit()

@@ -81,6 +81,12 @@ async def update_user(user_id: str, user_data: UserUpdate, db: Session = Depends
     
     # Update fields
     update_data = user_data.dict(exclude_unset=True)
+    
+    # Handle password update separately to ensure hashing
+    if 'password' in update_data:
+        password = update_data.pop('password')
+        user.hashed_password = hash_password(password)
+    
     for field, value in update_data.items():
         setattr(user, field, value)
     
@@ -100,7 +106,21 @@ async def delete_user(user_id: str, db: Session = Depends(get_db)):
             detail="User not found"
         )
     
-    user.is_active = False
+    # Cascade delete for student data
+    if user.role == UserRole.STUDENT:
+        # Import models locally to avoid circular imports if any, or just to keep scope clean
+        from models.enrollment import Enrollment
+        from models.payment import Payment
+        
+        # Find all enrollments
+        enrollments = db.query(Enrollment).filter(Enrollment.student_id == user_id).all()
+        for enrollment in enrollments:
+            # Delete payments for this enrollment
+            db.query(Payment).filter(Payment.enrollment_id == enrollment.id).delete()
+            # Delete enrollment
+            db.delete(enrollment)
+            
+    db.delete(user)
     db.commit()
     
-    return {"message": "User deleted successfully"}
+    return {"message": "User and associated data deleted successfully"}

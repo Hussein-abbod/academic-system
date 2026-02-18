@@ -18,9 +18,22 @@ async def get_my_payments(
     """
     Get all payments made by the current student
     """
-    # Join Payment with Enrollment to filter by student_id
-    payments = db.query(Payment).join(Enrollment).filter(
+    # Join Payment with Enrollment and Course to filter by student_id and get course name
+    from models.course import Course
+    from sqlalchemy.orm import joinedload
+    
+    payments = db.query(Payment).options(
+        joinedload(Payment.enrollment).joinedload(Enrollment.course)
+    ).join(Enrollment).join(Course).filter(
         Enrollment.student_id == current_user.id
     ).order_by(Payment.payment_date.desc()).all()
     
-    return [PaymentResponse.from_orm(payment) for payment in payments]
+    # Manually populate course_name since it's not a direct field on Payment model
+    results = []
+    for payment in payments:
+        response = PaymentResponse.from_orm(payment)
+        if payment.enrollment and payment.enrollment.course:
+            response.course_name = payment.enrollment.course.name
+        results.append(response)
+            
+    return results

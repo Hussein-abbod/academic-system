@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Sun, Moon, Bell, User } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
+import NotificationDropdown from '../shared/NotificationDropdown';
 
 const Navbar = () => {
   const { user } = useAuth();
@@ -29,10 +31,7 @@ const Navbar = () => {
           </button>
 
           {/* Notifications */}
-          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:bg-gray-700 transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
-          </button>
+          <NotificationDropdown />
 
           {/* User Profile */}
           <div className="flex items-center gap-3 ml-2 pl-2 border-l border-gray-200 dark:border-gray-700">
@@ -45,11 +44,13 @@ const Navbar = () => {
               </p>
             </div>
             
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 p-[2px]">
-              <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 flex items-center justify-center">
-                <User size={20} className="text-green-500" />
-              </div>
-            </div>
+            <Link
+              to="/student/profile"
+              title="My Profile"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm hover:opacity-80 transition-opacity"
+            >
+              {user?.full_name?.charAt(0)?.toUpperCase() || 'S'}
+            </Link>
           </div>
         </div>
       </div>

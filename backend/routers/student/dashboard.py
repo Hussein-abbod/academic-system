@@ -31,9 +31,24 @@ async def get_dashboard_stats(
     if active_enrollments:
         avg_progress = sum(e.current_progress for e in active_enrollments) / len(active_enrollments)
         
+    # Get recent quizzes
+    from models.quiz import Quiz
+    from schemas.models import QuizResponse
+    
+    course_ids = [e.course_id for e in active_enrollments]
+    recent_quizzes = []
+    
+    if course_ids:
+        quizzes = db.query(Quiz).filter(
+            Quiz.course_id.in_(course_ids)
+        ).order_by(Quiz.created_at.desc()).limit(5).all()
+        
+        recent_quizzes = [QuizResponse.from_orm(q) for q in quizzes]
+        
     return {
         "total_courses": total_courses,
         "active_courses": active_courses,
         "completed_courses": completed_courses,
-        "average_progress": round(avg_progress, 1)
+        "average_progress": round(avg_progress, 1),
+        "recent_quizzes": recent_quizzes
     }

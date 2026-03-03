@@ -18,12 +18,15 @@ import Payments from './pages/admin/Payments';
 import TeacherLayout from './layouts/TeacherLayout';
 import TeacherDashboard from './pages/teacher/Dashboard';
 import MyCourses from './pages/teacher/MyCourses';
+import CourseDetails from './pages/teacher/CourseDetails';
 import MyStudents from './pages/teacher/MyStudents';
 
 import StudentLayout from './layouts/StudentLayout';
 import StudentDashboard from './pages/student/Dashboard';
 import MyLearning from './pages/student/MyCourses';
+import StudentCourseDetails from './pages/student/CourseDetails';
 import MyPayments from './pages/student/MyPayments';
+import Profile from './pages/shared/Profile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,7 +61,7 @@ function App() {
                 <Route path="students" element={<Students />} />
                 <Route path="enrollments" element={<Enrollments />} />
                 <Route path="payments" element={<Payments />} />
-
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               {/* Teacher Routes */}
@@ -72,7 +75,9 @@ function App() {
               >
                 <Route index element={<TeacherDashboard />} />
                 <Route path="courses" element={<MyCourses />} />
+                <Route path="courses/:id" element={<CourseDetails />} />
                 <Route path="students" element={<MyStudents />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               {/* Student Routes */}
@@ -86,7 +91,9 @@ function App() {
               >
                 <Route index element={<StudentDashboard />} />
                 <Route path="courses" element={<MyLearning />} />
+                <Route path="courses/:id" element={<StudentCourseDetails />} />
                 <Route path="payments" element={<MyPayments />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               {/* Default redirect */}

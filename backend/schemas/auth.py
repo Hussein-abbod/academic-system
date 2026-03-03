@@ -28,3 +28,11 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class ProfileUpdate(BaseModel):
+    """Schema for updating user profile"""
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None

@@ -33,6 +33,7 @@ class User(Base):
     
     # Student relationship - enrollments for this student
     enrollments = relationship("Enrollment", back_populates="student", foreign_keys="Enrollment.student_id")
+    attendance_records = relationship("Attendance", back_populates="student", foreign_keys="Attendance.student_id")
     
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"

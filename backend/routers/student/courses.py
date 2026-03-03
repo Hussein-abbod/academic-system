@@ -47,3 +47,41 @@ async def get_my_courses(
         results.append(enrollment_dict)
         
     return results
+
+
+from schemas.models import CourseResponse
+
+@router.get("/courses/{course_id}", response_model=CourseResponse)
+async def get_course_details(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_student)
+):
+    """
+    Get details of a course the student is enrolled in
+    """
+    from models.course import Course
+    
+    # Verify enrollment
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == current_user.id,
+        Enrollment.course_id == course_id,
+        Enrollment.status.in_(["ACTIVE", "COMPLETED"])
+    ).first()
+    
+    if not enrollment:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not enrolled in this course"
+        )
+        
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+        
+    return CourseResponse.from_orm(course)

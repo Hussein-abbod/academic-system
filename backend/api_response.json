@@ -1,0 +1,26 @@
+[
+  {
+    "id": "8019f503-be7d-4138-917e-1f1e25b3fce8",
+    "student_id": "f971f8f5-af37-464e-a549-4ff770091f0f",
+    "course_id": "53fa1bfe-e909-49af-b28c-72e533f5d220",
+    "enrollment_date": "2026-02-16T14:16:22.364718",
+    "status": "ACTIVE",
+    "current_progress": 0.0,
+    "course_name": "basic ",
+    "course_price": 600.0,
+    "student_name": "John Conner",
+    "student_email": "student@cosmic.academy"
+  },
+  {
+    "id": "5b1777b2-bd03-4cd8-97ac-b78770db0317",
+    "student_id": "a0d6f00c-27c1-4478-a74a-d8aa8f03f3c2",
+    "course_id": "53fa1bfe-e909-49af-b28c-72e533f5d220",
+    "enrollment_date": "2026-02-16T15:26:02.774815",
+    "status": "ACTIVE",
+    "current_progress": 0.0,
+    "course_name": "basic ",
+    "course_price": 600.0,
+    "student_name": "HUSSEIn",
+    "student_email": "hussein@gmail.com"
+  }
+]

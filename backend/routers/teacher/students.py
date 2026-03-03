@@ -21,13 +21,37 @@ async def get_my_students(
     Optionally filter by course_id.
     """
     query = db.query(Enrollment).join(Course).filter(
-        Course.teacher_id == current_user.id,
-        Enrollment.status == "ACTIVE"
+        Course.teacher_id == current_user.id
     )
     
     if course_id:
-        query = query.filter(Course.id == course_id)
+        query = query.filter(Enrollment.course_id == course_id)
         
     enrollments = query.all()
     
-    return [EnrollmentResponse.from_orm(enrollment) for enrollment in enrollments]
+    results = []
+    for enrollment in enrollments:
+        resp = EnrollmentResponse.from_orm(enrollment)
+        
+        # Manually fetch student if needed
+        if not enrollment.student:
+            student = db.query(User).filter(User.id == enrollment.student_id).first()
+            if student:
+                resp.student_name = student.full_name
+                resp.student_email = student.email
+        else:
+            resp.student_name = enrollment.student.full_name
+            resp.student_email = enrollment.student.email
+            
+        if enrollment.course:
+            resp.course_name = enrollment.course.name
+            resp.course_price = float(enrollment.course.price) if enrollment.course.price else 0.0
+        else:
+            course = db.query(Course).filter(Course.id == enrollment.course_id).first()
+            if course:
+                resp.course_name = course.name
+                resp.course_price = float(course.price) if course.price else 0.0
+            
+        results.append(resp)
+            
+    return results

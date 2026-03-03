@@ -31,7 +31,7 @@ const MyStudents = () => {
     const columns = [
         {
         header: 'Student Name',
-        accessorKey: 'student.full_name',
+        accessorKey: 'student_name',
         cell: (row) => (
             <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
@@ -49,7 +49,7 @@ const MyStudents = () => {
         },
         {
         header: 'Enrolled Course',
-        accessorKey: 'course.name',
+        accessorKey: 'course_name',
         cell: (row) => (
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <BookOpen size={16} />

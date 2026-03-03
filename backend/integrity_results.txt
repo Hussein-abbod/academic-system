@@ -1,0 +1,27 @@
+
+=== DATA INTEGRITY CHECK ===
+Teachers Found: 3
+
+[Teacher] Sarah Connor (ID: 7863eac4-5185-4b71-b29a-643b40cc3809)
+  Courses: 1
+    [Course] basic  (ID: 53fa1bfe-e909-49af-b28c-72e533f5d220)
+      Total Enrollments (Raw): 2
+      Enrollments via API Query Logic: 2
+        -> Student: John Conner, Status: EnrollmentStatus.ACTIVE
+        -> Student: HUSSEIn, Status: EnrollmentStatus.ACTIVE
+
+[Teacher] Ali Hussein (ID: c84748cc-d452-4a9d-b6f7-227e0dd25c6f)
+  Courses: 2
+    [Course] intermediate 2 (ID: a0e155ad-a4c3-4934-bae8-7d22a74d8752)
+      Total Enrollments (Raw): 1
+      Enrollments via API Query Logic: 1
+        -> Student: John Conner, Status: EnrollmentStatus.COMPLETED
+    [Course] grammer (ID: 1416f7ed-9643-4520-a5d4-85090bbab1e8)
+      Total Enrollments (Raw): 2
+      Enrollments via API Query Logic: 2
+        -> Student: John Conner, Status: EnrollmentStatus.ACTIVE
+        -> Student: HUSSEIn, Status: EnrollmentStatus.ACTIVE
+
+[Teacher] Test Manual Teacher (ID: c73d74b8-8117-4fbc-bb8c-54aaeb2d4618)
+  Courses: 0
+    WARNING: This teacher has no courses.

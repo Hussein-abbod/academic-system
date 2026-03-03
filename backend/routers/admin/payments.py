@@ -29,9 +29,14 @@ async def create_payment(payment_data: PaymentCreate, db: Session = Depends(get_
     enrollment_date = enrollment.enrollment_date
     now = datetime.utcnow()
     
-    # Months = (Year Diff * 12) + Month Diff + 1 (current month counts)
-    months_enrolled = (now.year - enrollment_date.year) * 12 + (now.month - enrollment_date.month) + 1
-    if months_enrolled < 1: 
+    # Months = calendar month difference, but only count a new month after
+    # the enrollment anniversary day has been reached.
+    # e.g. enrolled Feb 16 → month 2 starts March 16, not March 1.
+    months_enrolled = (now.year - enrollment_date.year) * 12 + (now.month - enrollment_date.month)
+    if now.day < enrollment_date.day:
+        months_enrolled -= 1  # anniversary day not yet reached this month
+    months_enrolled += 1  # enrollment month itself (month 1)
+    if months_enrolled < 1:
         months_enrolled = 1
         
     total_expected = months_enrolled * float(course.price)

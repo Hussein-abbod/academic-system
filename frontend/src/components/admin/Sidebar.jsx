@@ -8,7 +8,7 @@ import {
   GraduationCap,
   UserCheck,
   CreditCard,
-
+  User,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -21,7 +21,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: GraduationCap, label: 'Students', path: '/admin/students' },
     { icon: UserCheck, label: 'Enrollments', path: '/admin/enrollments' },
     { icon: CreditCard, label: 'Payments', path: '/admin/payments' },
-
+    { icon: User, label: 'Profile', path: '/admin/profile' },
   ];
 
   return (

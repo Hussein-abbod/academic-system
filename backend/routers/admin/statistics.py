@@ -111,6 +111,7 @@ async def get_student_statistics(db: Session = Depends(get_db)):
 async def get_revenue_chart_data(period: str = "6m", db: Session = Depends(get_db)):
     """Get revenue chart data aggregated by time"""
     from datetime import datetime, timedelta
+    from sqlalchemy import case
     
     # Calculate start date based on period
     now = datetime.utcnow()
@@ -119,27 +120,33 @@ async def get_revenue_chart_data(period: str = "6m", db: Session = Depends(get_d
     elif period == "30d":
         start_date = now - timedelta(days=30)
     elif period == "all":
-        start_date = datetime.min
+        start_date = None  # No date filter for all time
     else:  # Default to 6m
         start_date = now - timedelta(days=180)
-        
-    # Aggregate revenue by month (using SQLite compatible strftime)
-    # Note: For proper DB independence, this should be dialect-aware, 
-    # but using strftime is safe for SQLite which is the default here.
-    revenue_data = db.query(
-        func.strftime('%Y-%m', Payment.payment_date).label("month"),
+
+    # Use COALESCE so payments where payment_date is NULL fall back to created_at
+    effective_date = func.coalesce(Payment.payment_date, Payment.created_at)
+
+    # For 30-day view use daily granularity; all others use monthly
+    if period == "30d":
+        date_label = func.strftime('%Y-%m-%d', effective_date).label("date_label")
+    else:
+        date_label = func.strftime('%Y-%m', effective_date).label("date_label")
+
+    query = db.query(
+        date_label,
         func.sum(Payment.amount).label("total")
     ).filter(
-        Payment.payment_status == PaymentStatus.PAID,
-        Payment.payment_date >= start_date
-    ).group_by(
-        func.strftime('%Y-%m', Payment.payment_date)
-    ).order_by(
-        func.strftime('%Y-%m', Payment.payment_date)
-    ).all()
-    
+        Payment.payment_status == PaymentStatus.PAID
+    )
+
+    if start_date is not None:
+        query = query.filter(effective_date >= start_date)
+
+    revenue_data = query.group_by(date_label).order_by(date_label).all()
+
     # Format for frontend
     return [
-        {"date": month, "amount": float(total or 0)}
-        for month, total in revenue_data
+        {"date": date_str, "amount": float(total or 0)}
+        for date_str, total in revenue_data
     ]

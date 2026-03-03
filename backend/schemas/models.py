@@ -68,11 +68,13 @@ class EnrollmentResponse(BaseModel):
     id: str
     student_id: str
     course_id: str
-    enrollment_date: str
+    enrollment_date: datetime
     status: str
     current_progress: float
     course_name: Optional[str] = None
     course_price: Optional[float] = None
+    student_name: Optional[str] = None
+    student_email: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -103,6 +105,68 @@ class PaymentResponse(BaseModel):
     notes: Optional[str] = None
     created_at: datetime
     course_name: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class QuizCreate(BaseModel):
+    """Schema for creating a quiz"""
+    title: str
+    description: Optional[str] = None
+    quiz_type: str
+    link: str
+    due_date: Optional[datetime] = None
+
+
+class QuizUpdate(BaseModel):
+    """Schema for updating a quiz"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    quiz_type: Optional[str] = None
+    link: Optional[str] = None
+    due_date: Optional[datetime] = None
+
+
+class QuizResponse(BaseModel):
+    """Schema for quiz response"""
+    id: str
+    course_id: str
+    title: str
+    description: Optional[str] = None
+    quiz_type: str
+    link: Optional[str] = None
+    due_date: Optional[datetime] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class AttendanceCreate(BaseModel):
+    """Schema for creating attendance record"""
+    course_id: str
+    student_id: str
+    status: str
+    date: Optional[str] = None  # ISO date string e.g. '2026-03-03'; parsed in the route handler
+    notes: Optional[str] = None
+
+
+class AttendanceUpdate(BaseModel):
+    """Schema for updating attendance record"""
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class AttendanceResponse(BaseModel):
+    """Schema for attendance response"""
+    id: str
+    course_id: str
+    student_id: str
+    date: date
+    status: str
+    notes: Optional[str] = None
+    student_name: Optional[str] = None
     
     class Config:
         from_attributes = True

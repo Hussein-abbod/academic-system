@@ -5,6 +5,7 @@ from database import Base, engine
 from routers import auth
 from routers.admin import users, courses, enrollments, payments, statistics
 from routers import teacher, student
+from routers.notifications import router as notifications_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -34,6 +35,7 @@ app.include_router(payments.router)
 app.include_router(statistics.router)
 app.include_router(teacher.router)
 app.include_router(student.router)
+app.include_router(notifications_router)
 
 
 @app.get("/")

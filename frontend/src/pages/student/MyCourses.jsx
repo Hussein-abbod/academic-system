@@ -54,9 +54,12 @@ const MyCourses = () => {
                     {new Date(enrollment.enrollment_date).toLocaleDateString()}
                  </div>
                  
-                 <button className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                 <a 
+                    href={`/student/courses/${enrollment.course_id}`}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1"
+                 >
                     Continue <PlayCircle size={16} />
-                 </button>
+                 </a>
               </div>
             </div>
           </Card>

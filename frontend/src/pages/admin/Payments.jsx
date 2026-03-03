@@ -7,14 +7,21 @@ import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import { Input, Select, TextArea } from '../../components/ui/forms';
 
-// Helper to calculate month difference
-const differenceInMonths = (d1, d2) => {
-  const date1 = new Date(d1);
-  const date2 = new Date(d2);
-  let months = (date1.getFullYear() - date2.getFullYear()) * 12;
-  months -= date2.getMonth();
-  months += date1.getMonth();
-  return months <= 0 ? 0 : months;
+// Helper to calculate billing months since enrollment.
+// Month 2 only starts on the same day-of-month as enrollment
+// (e.g. enrolled Feb 16 → month 2 starts March 16, not March 1).
+const getMonthsEnrolled = (enrollmentDate) => {
+  const d = new Date(enrollmentDate);
+  const now = new Date();
+  let months =
+    (now.getFullYear() - d.getFullYear()) * 12 +
+    (now.getMonth() - d.getMonth());
+  // If we haven't reached the anniversary day yet, don't count this month
+  if (now.getDate() < d.getDate()) {
+    months -= 1;
+  }
+  months += 1; // enrollment month (month 1)
+  return months < 1 ? 1 : months;
 };
 
 const SEARCH_KEYS = ['studentName'];
@@ -83,14 +90,8 @@ const Payments = () => {
       
       if (!course || !student) return null;
 
-      // 1. Calculate Months Enrolled
-      // Enrollment date to Now
-      // If enrolled today, count as 1 month due immediately (or 0 if postpaid, assuming prepaid here: 1st month due on signup)
-      const enrollmentDate = new Date(enrollment.enrollment_date);
-      const now = new Date();
-      
-      // Logic: Months passed since enrollment + 1 for current month
-      const monthsEnrolled = differenceInMonths(now, enrollmentDate) + 1;
+      // 1. Calculate Months Enrolled (day-of-month aware)
+      const monthsEnrolled = getMonthsEnrolled(enrollment.enrollment_date);
       
       // 2. Calculate Total Expected
       const monthlyPrice = course.price; // Reusing price field
@@ -112,7 +113,7 @@ const Payments = () => {
         studentName: student.full_name || 'Unknown Student',
         courseName: course.name || 'Unknown Course',
         monthlyPrice,
-        enrollmentDate,
+        enrollmentDate: new Date(enrollment.enrollment_date),
         monthsEnrolled,
         totalExpected,
         totalPaid,

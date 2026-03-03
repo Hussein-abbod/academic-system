@@ -72,10 +72,16 @@ const RevenueChart = () => {
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
   const formatDate = (dateStr) => {
-    // dateStr is 'YYYY-MM'
+    if (!dateStr) return '';
+    if (dateStr.length === 10) {
+      // Daily format: 'YYYY-MM-DD'
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    // Monthly format: 'YYYY-MM'
     const [year, month] = dateStr.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    const d = new Date(parseInt(year), parseInt(month) - 1);
+    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
   };
 
   return (

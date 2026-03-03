@@ -36,11 +36,15 @@ const MyCourses = () => {
       accessorKey: 'start_date',
       cell: (row) => (
         <div className="flex flex-col text-sm text-gray-500">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 font-medium text-gray-700 dark:text-gray-300">
             <Calendar size={14} />
-            {new Date(row.start_date).toLocaleDateString()}
+            {new Date(row.start_date).toLocaleDateString()} - {new Date(row.end_date).toLocaleDateString()}
           </span>
-          <span className="text-xs">to {new Date(row.end_date).toLocaleDateString()}</span>
+          {(row.start_time || row.end_time) && (
+            <span className="text-xs mt-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md inline-block w-fit">
+              {row.start_time} - {row.end_time}
+            </span>
+          )}
         </div>
       ),
     },
@@ -55,6 +59,17 @@ const MyCourses = () => {
         }`}>
           {row.is_active ? 'Active' : 'Inactive'}
         </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      cell: (row) => (
+        <a 
+          href={`/teacher/courses/${row.id}`}
+          className="px-3 py-1.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+        >
+          Manage
+        </a>
       ),
     },
   ];

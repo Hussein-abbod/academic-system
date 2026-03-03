@@ -24,6 +24,8 @@ class Course(Base):
     # Relationships
     teacher = relationship("User", back_populates="courses_taught", foreign_keys=[teacher_id])
     enrollments = relationship("Enrollment", back_populates="course")
+    quizzes = relationship("Quiz", back_populates="course")
+    attendance_records = relationship("Attendance", back_populates="course")
     
     def __repr__(self):
         return f"<Course(id={self.id}, name={self.name})>"

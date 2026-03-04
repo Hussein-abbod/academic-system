@@ -71,12 +71,14 @@ const Profile = () => {
         },
     });
 
+    const isStudent = user?.role === 'STUDENT';
+
     const handleProfileSave = (e) => {
         e.preventDefault();
-        profileMutation.mutate({
-            full_name: form.full_name.trim(),
-            phone_number: form.phone_number.trim() || null,
-        });
+        const payload = { phone_number: form.phone_number.trim() || null };
+        // Students cannot change their name — only admins can
+        if (!isStudent) payload.full_name = form.full_name.trim();
+        profileMutation.mutate(payload);
     };
 
     const handlePasswordSave = (e) => {
@@ -145,9 +147,19 @@ const Profile = () => {
                         type="text"
                         required
                         value={form.full_name}
-                        onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        disabled={isStudent}
+                        onChange={(e) => !isStudent && setForm({ ...form, full_name: e.target.value })}
+                        className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            isStudent
+                                ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                : 'border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700'
+                        }`}
                     />
+                    {isStudent && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                            🔒 Name can only be changed by an admin. Please contact your administrator.
+                        </p>
+                    )}
                 </div>
 
                 <div>

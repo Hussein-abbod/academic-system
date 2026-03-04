@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import api from '../../utils/api';
@@ -13,12 +13,17 @@ import {
   CheckCircle, 
   Plus, 
   Trash2,
-  ExternalLink,
-  AlertCircle
+  Edit2,
+  BarChart2,
+  AlertCircle,
+  ClipboardList,
+  Send,
+  Lock
 } from 'lucide-react';
 
 const CourseDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const queryClient = useQueryClient();
 
@@ -40,12 +45,12 @@ const CourseDetails = () => {
     },
   });
 
-  // Fetch quizzes
-  const { data: quizzes, isLoading: quizzesLoading } = useQuery({
-    queryKey: ['teacher-course-quizzes', id],
+  // Fetch quizzes for this course from the new internal quiz system
+  const { data: quizzes = [], isLoading: quizzesLoading } = useQuery({
+    queryKey: ['teacher-quizzes-course', id],
     queryFn: async () => {
-      const response = await api.get(`/teacher/courses/${id}/quizzes`);
-      return response.data;
+      const response = await api.get('/teacher/quizzes');
+      return response.data.filter(q => q.course_id === id);
     },
   });
 
@@ -59,27 +64,23 @@ const CourseDetails = () => {
     },
   });
 
-  // Quiz Mutation
-  const [newQuiz, setNewQuiz] = useState({ title: '', description: '', quiz_type: 'READING', link: '', due_date: '' });
-  const createQuizMutation = useMutation({
-    mutationFn: (quizData) => api.post(`/teacher/courses/${id}/quizzes`, quizData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['teacher-course-quizzes', id]);
-      setNewQuiz({ title: '', description: '', quiz_type: 'READING', link: '', due_date: '' });
-      alert('Quiz created successfully!');
-    },
-  });
-
-  const handleCreateQuiz = (e) => {
-    e.preventDefault();
-    createQuizMutation.mutate(newQuiz);
-  };
-
+  // Quiz mutations
   const deleteQuizMutation = useMutation({
     mutationFn: (quizId) => api.delete(`/teacher/quizzes/${quizId}`),
     onSuccess: () => {
-        queryClient.invalidateQueries(['teacher-course-quizzes', id]);
-    }
+      queryClient.invalidateQueries(['teacher-quizzes-course', id]);
+      toast.success('Quiz deleted');
+    },
+    onError: () => toast.error('Failed to delete quiz'),
+  });
+
+  const publishQuizMutation = useMutation({
+    mutationFn: (quizId) => api.post(`/teacher/quizzes/${quizId}/publish`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['teacher-quizzes-course', id]);
+      toast.success('Quiz published!');
+    },
+    onError: (err) => toast.error(err.response?.data?.detail || 'Publish failed'),
   });
 
   // Attendance Mutation
@@ -231,112 +232,94 @@ const CourseDetails = () => {
         )}
 
         {activeTab === 'quizzes' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-                {quizzes?.map((quiz) => (
-                    <Card key={quiz.id} className="relative">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                    {quiz.title}
-                                    <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                        {quiz.quiz_type}
-                                    </span>
-                                </h3>
-                                <p className="text-sm text-gray-500 mt-1">{quiz.description}</p>
-                                <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                                    {quiz.due_date && (
-                                        <span className="flex items-center gap-1">
-                                            <Calendar size={14} />
-                                            Due: {new Date(quiz.due_date).toLocaleDateString()}
-                                        </span>
-                                    )}
-                                    {quiz.link && (
-                                        <a href={quiz.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-purple-600 hover:underline">
-                                            <ExternalLink size={14} />
-                                            View Quiz
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                            <button 
-                                onClick={() => deleteQuizMutation.mutate(quiz.id)}
-                                className="text-red-500 hover:text-red-700 p-2"
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
-                    </Card>
-                ))}
-                {(!quizzes || quizzes.length === 0) && (
-                    <div className="text-center py-10 bg-gray-50 dark:bg-slate-800/50 rounded-lg">
-                        <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                        <p className="text-gray-500">No quizzes created yet.</p>
+          <div className="space-y-4">
+            {/* Header with Create button */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <ClipboardList size={20} className="text-purple-500" />
+                Course Quizzes
+              </h2>
+              <button
+                onClick={() => navigate('/teacher/quizzes/new', { state: { prefill_course_id: id } })}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition shadow-md"
+              >
+                <Plus size={16} /> Create Quiz
+              </button>
+            </div>
+
+            {quizzesLoading && <p className="text-gray-400 text-sm">Loading quizzes…</p>}
+
+            {!quizzesLoading && quizzes.length === 0 && (
+              <div className="text-center py-14 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <ClipboardList size={40} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                <p className="text-gray-500 dark:text-gray-400 font-medium">No quizzes yet</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Click "Create Quiz" to add one for this course</p>
+              </div>
+            )}
+
+            {quizzes.map((quiz) => (
+              <div key={quiz.id} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-base truncate">{quiz.title}</h3>
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                        quiz.status === 'PUBLISHED'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      }`}>
+                        {quiz.status === 'PUBLISHED' ? '● Published' : '○ Draft'}
+                      </span>
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        {quiz.quiz_type}
+                      </span>
                     </div>
-                )}
-            </div>
-            <div>
-                <Card title="Create New Quiz">
-                    <form onSubmit={handleCreateQuiz} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                            <input 
-                                type="text"
-                                required
-                                value={newQuiz.title}
-                                onChange={(e) => setNewQuiz({...newQuiz, title: e.target.value})}
-                                className="w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                            <select
-                                value={newQuiz.quiz_type}
-                                onChange={(e) => setNewQuiz({...newQuiz, quiz_type: e.target.value})}
-                                className="w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"
-                            >
-                                <option value="READING">Reading</option>
-                                <option value="LISTENING">Listening</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link (Microsoft Forms)</label>
-                            <input 
-                                type="url"
-                                value={newQuiz.link}
-                                onChange={(e) => setNewQuiz({...newQuiz, link: e.target.value})}
-                                className="w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"
-                                placeholder="https://forms.office.com/..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
-                            <input 
-                                type="datetime-local"
-                                value={newQuiz.due_date}
-                                onChange={(e) => setNewQuiz({...newQuiz, due_date: e.target.value})}
-                                className="w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                            <textarea
-                                value={newQuiz.description}
-                                onChange={(e) => setNewQuiz({...newQuiz, description: e.target.value})}
-                                className="w-full p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"
-                                rows="3"
-                            ></textarea>
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={createQuizMutation.isPending}
-                            className="w-full py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
-                        >
-                            {createQuizMutation.isPending ? 'Creating...' : 'Create Quiz'}
-                        </button>
-                    </form>
-                </Card>
-            </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      <span>{quiz.questions?.length || 0} questions</span>
+                      <span>{quiz.total_points || 0} pts</span>
+                      {quiz.time_limit_minutes && <span>{quiz.time_limit_minutes} min</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {quiz.status !== 'PUBLISHED' && (
+                      <button
+                        onClick={() => publishQuizMutation.mutate(quiz.id)}
+                        disabled={publishQuizMutation.isPending}
+                        title="Publish"
+                        className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 transition-colors"
+                      >
+                        <Send size={15} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate(`/teacher/quizzes/${quiz.id}/results`)}
+                      title="View Results"
+                      className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/20 transition-colors"
+                    >
+                      <BarChart2 size={15} />
+                    </button>
+                    <button
+                      onClick={() => navigate(`/teacher/quizzes/${quiz.id}/edit`)}
+                      title="Edit"
+                      className="p-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-600 dark:bg-purple-900/20 transition-colors"
+                    >
+                      <Edit2 size={15} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Delete this quiz? This cannot be undone.')) {
+                          deleteQuizMutation.mutate(quiz.id);
+                        }
+                      }}
+                      title="Delete"
+                      className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 dark:bg-red-900/20 transition-colors"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

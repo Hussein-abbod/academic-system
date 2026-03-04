@@ -4,7 +4,10 @@ from .user import User
 from .course import Course
 from .enrollment import Enrollment
 from .payment import Payment
-from .quiz import Quiz
+from .quiz import Quiz, QuizQuestion, QuizOption, QuizSubmission, QuizAnswer
 from .attendance import Attendance
 
-__all__ = ["User", "Course", "Enrollment", "Payment", "Quiz", "Attendance"]
+__all__ = [
+    "User", "Course", "Enrollment", "Payment", "Attendance",
+    "Quiz", "QuizQuestion", "QuizOption", "QuizSubmission", "QuizAnswer"
+]

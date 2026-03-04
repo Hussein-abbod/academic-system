@@ -9,8 +9,12 @@ import {
   Clock, 
   FileText, 
   CheckCircle,
-  ExternalLink,
-  ArrowLeft
+  ArrowLeft,
+  ClipboardList,
+  PlayCircle,
+  RotateCcw,
+  Lock,
+  Trophy
 } from 'lucide-react';
 
 const CourseDetails = () => {
@@ -27,14 +31,24 @@ const CourseDetails = () => {
     },
   });
 
-  // Fetch quizzes
-  const { data: quizzes, isLoading: quizzesLoading } = useQuery({
-    queryKey: ['student-course-quizzes', id],
-    queryFn: async () => {
-      const response = await api.get(`/student/courses/${id}/quizzes`);
-      return response.data;
-    },
+  // Fetch quizzes from new internal quiz system, filtered by this course
+  const { data: allQuizzes = [], isLoading: quizzesLoading } = useQuery({
+    queryKey: ['student-quizzes'],
+    queryFn: async () => (await api.get('/student/quizzes')).data,
   });
+
+  // Filter to this course only and parse attempt info
+  const quizzes = allQuizzes
+    .filter(q => q.course_id === id)
+    .map(q => {
+      const match = (q.description || '').match(/__attempts_used:(\d+)/);
+      const attemptsUsed = match ? parseInt(match[1]) : 0;
+      return {
+        ...q,
+        description: (q.description || '').replace(/__attempts_used:\d+/, '').trim(),
+        attemptsUsed,
+      };
+    });
 
   // Fetch attendance
   const { data: attendance, isLoading: attendanceLoading } = useQuery({
@@ -133,43 +147,87 @@ const CourseDetails = () => {
 
         {activeTab === 'quizzes' && (
           <div className="space-y-4">
-            {quizzes?.map((quiz) => (
-                <Card key={quiz.id} className="hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                {quiz.title}
-                                <span className={`px-2 py-0.5 text-xs rounded-full ${
-                                    quiz.quiz_type === 'READING' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                }`}>
-                                    {quiz.quiz_type}
-                                </span>
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-1">{quiz.description}</p>
-                            {quiz.due_date && (
-                                <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                                    <Clock size={12} /> Due: {new Date(quiz.due_date).toLocaleDateString()}
-                                </p>
-                            )}
-                        </div>
-                        {quiz.link && (
-                            <a 
-                                href={quiz.link} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"
-                            >
-                                Start Quiz <ExternalLink size={14} />
-                            </a>
-                        )}
-                    </div>
-                </Card>
-            ))}
-             {(!quizzes || quizzes.length === 0) && (
-                <div className="text-center py-12 text-gray-500">
-                    No quizzes available for this course yet.
-                </div>
+            {quizzesLoading && <p className="text-gray-400 text-sm">Loading quizzes…</p>}
+
+            {!quizzesLoading && quizzes.length === 0 && (
+              <div className="text-center py-14 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <ClipboardList size={40} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                <p className="text-gray-500 dark:text-gray-400 font-medium">No quizzes available yet</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Your teacher hasn't published any quizzes for this course</p>
+              </div>
             )}
+
+            {quizzes.map((quiz) => {
+              const now = new Date();
+              const isOpen = (!quiz.open_date || new Date(quiz.open_date) <= now)
+                          && (!quiz.close_date || new Date(quiz.close_date) >= now);
+              const isCompleted = quiz.attemptsUsed >= quiz.max_attempts;
+              const canRetake = quiz.attemptsUsed > 0 && quiz.attemptsUsed < quiz.max_attempts && isOpen;
+              const canStart = quiz.attemptsUsed === 0 && isOpen;
+
+              return (
+                <div key={quiz.id} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-white text-base">{quiz.title}</h3>
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                          quiz.quiz_type === 'READING' ? 'bg-blue-100 text-blue-700' :
+                          quiz.quiz_type === 'LISTENING' ? 'bg-purple-100 text-purple-700' :
+                          'bg-indigo-100 text-indigo-700'
+                        }`}>{quiz.quiz_type}</span>
+                        {isCompleted && (
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">
+                            <Trophy size={10} className="inline mr-1" />Completed
+                          </span>
+                        )}
+                        {!isOpen && (
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                            <Lock size={10} className="inline mr-1" />Closed
+                          </span>
+                        )}
+                      </div>
+                      {quiz.description && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{quiz.description}</p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-400 mt-2">
+                        <span>{quiz.questions?.length || 0} questions · {quiz.total_points || 0} pts</span>
+                        {quiz.time_limit_minutes && <span><Clock size={10} className="inline" /> {quiz.time_limit_minutes} min</span>}
+                        <span>Attempts: {quiz.attemptsUsed}/{quiz.max_attempts}</span>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      {canStart && (
+                        <button
+                          onClick={() => navigate(`/student/quizzes/${quiz.id}/take`)}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition shadow-md"
+                        >
+                          <PlayCircle size={16} /> Start Quiz
+                        </button>
+                      )}
+                      {canRetake && (
+                        <button
+                          onClick={() => navigate(`/student/quizzes/${quiz.id}/take`)}
+                          className="flex items-center gap-2 px-4 py-2 border border-purple-400 text-purple-600 dark:text-purple-400 text-sm font-medium rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition"
+                        >
+                          <RotateCcw size={14} /> Retake
+                        </button>
+                      )}
+                      {isCompleted && (
+                        <span className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
+                          <CheckCircle size={16} /> Done
+                        </span>
+                      )}
+                      {!isOpen && !isCompleted && (
+                        <span className="flex items-center gap-1 text-gray-400 text-sm">
+                          <Lock size={14} /> Unavailable
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

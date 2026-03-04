@@ -1,11 +1,14 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from config import settings
 from database import Base, engine
 from routers import auth
 from routers.admin import users, courses, enrollments, payments, statistics
 from routers import teacher, student
 from routers.notifications import router as notifications_router
+from routers.uploads import router as uploads_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -26,8 +29,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ensure upload directory exists and mount it for static serving
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(os.path.join(UPLOAD_DIR, "audio"), exist_ok=True)
+os.makedirs(os.path.join(UPLOAD_DIR, "images"), exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 # Include routers
 app.include_router(auth.router)
+app.include_router(uploads_router)
 app.include_router(users.router)
 app.include_router(courses.router)
 app.include_router(enrollments.router)

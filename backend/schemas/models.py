@@ -110,35 +110,175 @@ class PaymentResponse(BaseModel):
         from_attributes = True
 
 
+# ---------------------------------------------------------------------------
+# Quiz Option schemas
+# ---------------------------------------------------------------------------
+
+class OptionCreate(BaseModel):
+    """Schema for creating an answer option"""
+    option_text: Optional[str] = None
+    option_image_path: Optional[str] = None
+    is_correct: bool = False
+    order_index: int = 0
+
+
+class OptionResponse(BaseModel):
+    """Schema for returning an option (is_correct hidden for students)"""
+    id: str
+    option_text: Optional[str] = None
+    option_image_path: Optional[str] = None
+    order_index: int
+    is_correct: Optional[bool] = None  # omitted in student view
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------------------------------------------------------------------
+# Quiz Question schemas
+# ---------------------------------------------------------------------------
+
+class QuestionCreate(BaseModel):
+    """Schema for adding a question to a quiz"""
+    question_type: str = "MCQ"       # MCQ | LISTENING | SHORT_ANSWER
+    question_text: str
+    audio_file_path: Optional[str] = None
+    points: float = 1.0
+    order_index: int = 0
+    options: Optional[list[OptionCreate]] = None
+
+
+class QuestionUpdate(BaseModel):
+    """Schema for updating a question"""
+    question_type: Optional[str] = None
+    question_text: Optional[str] = None
+    audio_file_path: Optional[str] = None
+    points: Optional[float] = None
+    order_index: Optional[int] = None
+    options: Optional[list[OptionCreate]] = None
+
+
+class QuestionResponse(BaseModel):
+    """Schema for returning a question"""
+    id: str
+    quiz_id: str
+    question_type: str
+    question_text: str
+    audio_file_path: Optional[str] = None
+    points: float
+    order_index: int
+    options: list[OptionResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------------------------------------------------------------------
+# Quiz schemas
+# ---------------------------------------------------------------------------
+
 class QuizCreate(BaseModel):
-    """Schema for creating a quiz"""
+    """Schema for creating a quiz (header info)"""
     title: str
     description: Optional[str] = None
-    quiz_type: str
-    link: str
-    due_date: Optional[datetime] = None
+    quiz_type: str = "READING"
+    course_id: str
+    time_limit_minutes: Optional[int] = None
+    max_attempts: int = 1
+    open_date: Optional[datetime] = None
+    close_date: Optional[datetime] = None
 
 
 class QuizUpdate(BaseModel):
-    """Schema for updating a quiz"""
+    """Schema for updating quiz settings"""
     title: Optional[str] = None
     description: Optional[str] = None
     quiz_type: Optional[str] = None
-    link: Optional[str] = None
-    due_date: Optional[datetime] = None
+    time_limit_minutes: Optional[int] = None
+    max_attempts: Optional[int] = None
+    open_date: Optional[datetime] = None
+    close_date: Optional[datetime] = None
 
 
 class QuizResponse(BaseModel):
-    """Schema for quiz response"""
+    """Schema for returning a quiz (with or without questions)"""
     id: str
     course_id: str
+    created_by: str
     title: str
     description: Optional[str] = None
     quiz_type: str
-    link: Optional[str] = None
-    due_date: Optional[datetime] = None
+    status: str
+    time_limit_minutes: Optional[int] = None
+    max_attempts: int
+    open_date: Optional[datetime] = None
+    close_date: Optional[datetime] = None
     created_at: datetime
-    
+    questions: list[QuestionResponse] = []
+    total_points: Optional[float] = None
+    course_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------------------------------------------------------------------
+# Quiz Submission / Answer schemas
+# ---------------------------------------------------------------------------
+
+class AnswerSubmit(BaseModel):
+    """One student answer inside a submission"""
+    question_id: str
+    selected_option_id: Optional[str] = None
+    short_answer_text: Optional[str] = None
+
+
+class SubmissionCreate(BaseModel):
+    """Payload for submitting a quiz attempt"""
+    answers: list[AnswerSubmit]
+
+
+class AnswerResult(BaseModel):
+    """Result for a single question after grading"""
+    question_id: str
+    question_text: str
+    selected_option_id: Optional[str] = None
+    is_correct: Optional[bool] = None
+    points_awarded: float
+    max_points: float
+
+    class Config:
+        from_attributes = True
+
+
+class QuizResultResponse(BaseModel):
+    """Full result returned after submitting a quiz"""
+    submission_id: str
+    quiz_id: str
+    quiz_title: str
+    score: float
+    max_score: float
+    percentage: float
+    attempt_number: int
+    submitted_at: Optional[datetime] = None
+    answers: list[AnswerResult] = []
+
+    class Config:
+        from_attributes = True
+
+
+class SubmissionSummary(BaseModel):
+    """Summary of a student submission (for teacher results view)"""
+    submission_id: str
+    student_id: str
+    student_name: str
+    score: Optional[float] = None
+    max_score: Optional[float] = None
+    percentage: Optional[float] = None
+    attempt_number: int
+    submitted_at: Optional[datetime] = None
+    status: str
+
     class Config:
         from_attributes = True
 

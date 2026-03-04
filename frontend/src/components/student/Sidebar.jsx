@@ -8,7 +8,8 @@ import {
   LogOut, 
   ChevronLeft,
   GraduationCap,
-  User
+  User,
+  ClipboardList
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -17,6 +18,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/student' },
     { icon: BookOpen, label: 'My Learning', path: '/student/courses' },
+    { icon: ClipboardList, label: 'Quizzes', path: '/student/quizzes' },
     { icon: CreditCard, label: 'My Payments', path: '/student/payments' },
     { icon: User, label: 'Profile', path: '/student/profile' },
   ];

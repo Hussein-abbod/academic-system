@@ -157,6 +157,7 @@ async def publish_quiz(
                 )
 
     quiz.status = QuizStatus.PUBLISHED
+    quiz.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(quiz)
     return _quiz_to_response(quiz)

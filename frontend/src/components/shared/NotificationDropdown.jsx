@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, CreditCard, UserCheck, BookOpen, X } from 'lucide-react';
+import { Bell, CreditCard, UserCheck, BookOpen, X, ClipboardList } from 'lucide-react';
 import api from '../../utils/api';
 
 const typeConfig = {
@@ -18,6 +18,11 @@ const typeConfig = {
         icon: BookOpen,
         color: 'text-purple-600 dark:text-purple-400',
         bg: 'bg-purple-50 dark:bg-purple-900/20',
+    },
+    quiz: {
+        icon: ClipboardList,
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-50 dark:bg-amber-900/20',
     },
 };
 

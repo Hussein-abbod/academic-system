@@ -90,6 +90,33 @@ async def get_notifications(
                 "time": e.enrollment_date.isoformat(),
             })
 
+        # 4. Recently published quizzes in the student's enrolled courses
+        from models.quiz import Quiz, QuizStatus
+        all_enrollments = db.query(Enrollment).filter(
+            Enrollment.student_id == current_user.id
+        ).all()
+        all_course_ids = [e.course_id for e in all_enrollments]
+
+        if all_course_ids:
+            recent_quizzes = db.query(Quiz).options(
+                joinedload(Quiz.course)
+            ).filter(
+                Quiz.course_id.in_(all_course_ids),
+                Quiz.status == QuizStatus.PUBLISHED,
+                Quiz.updated_at >= since_datetime
+            ).order_by(Quiz.updated_at.desc()).limit(10).all()
+
+            for q in recent_quizzes:
+                course_name = q.course.name if q.course else "your course"
+                quiz_type = q.quiz_type.value if hasattr(q.quiz_type, "value") else str(q.quiz_type)
+                notifications.append({
+                    "id": f"quiz-{q.id}",
+                    "type": "quiz",
+                    "title": "New Quiz Available 🎯",
+                    "message": f"\"{q.title}\" ({quiz_type.capitalize()}) is now available in {course_name}.",
+                    "time": q.updated_at.isoformat(),
+                })
+
     elif current_user.role == UserRole.TEACHER:
         # New students enrolled in the teacher's courses in the last 30 days
         teacher_courses = db.query(Course).filter(

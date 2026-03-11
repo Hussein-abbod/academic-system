@@ -44,7 +44,6 @@ async def create_enrollment(enrollment_data: EnrollmentCreate, db: Session = Dep
     db.commit()
     db.refresh(new_enrollment)
     
-    # Convert to dict and serialize datetime
     return {
         "id": str(new_enrollment.id),
         "student_id": new_enrollment.student_id,

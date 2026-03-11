@@ -108,7 +108,6 @@ async def delete_user(user_id: str, db: Session = Depends(get_db)):
     
     # Cascade delete for student data
     if user.role == UserRole.STUDENT:
-        # Import models locally to avoid circular imports if any, or just to keep scope clean
         from models.enrollment import Enrollment
         from models.payment import Payment
         

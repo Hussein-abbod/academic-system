@@ -1,20 +1,22 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  CreditCard, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  CreditCard,
+  LogOut,
   ChevronLeft,
+  ChevronRight,
   GraduationCap,
   User,
-  ClipboardList
+  ClipboardList,
+  X
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const { logout } = useAuth();
-  
+
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/student' },
     { icon: BookOpen, label: 'My Learning', path: '/student/courses' },
@@ -24,15 +26,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   ];
 
   return (
-    <aside 
-      className={`fixed top-0 left-0 z-40 h-screen transition-width duration-300 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 ${
-        isOpen ? 'w-64' : 'w-20'
-      }`}
+    <aside
+      className={`fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300
+        ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'}
+      `}
     >
       <div className="flex flex-col h-full">
         {/* Logo Section */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-          <div className={`flex items-center gap-2 overflow-hidden ${!isOpen && 'justify-center'}`}>
+          <div className="flex items-center gap-2 overflow-hidden">
             <div className="bg-gradient-to-tr from-green-500 to-emerald-600 text-white p-2 rounded-lg shrink-0">
               <GraduationCap size={24} />
             </div>
@@ -42,11 +44,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               </span>
             )}
           </div>
-          <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className={`p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 lg:block hidden`}
+
+          {/* X on mobile, Chevron on desktop */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 md:hidden"
           >
-            <ChevronLeft size={20} className={`transition-transform duration-300 ${!isOpen && 'rotate-180'}`} />
+            <X size={20} />
+          </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 hidden md:flex items-center"
+          >
+            {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
         </div>
 
@@ -58,23 +68,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 <NavLink
                   to={item.path}
                   end={item.path === '/student'}
+                  onClick={() => { if (window.innerWidth < 768) setIsOpen(false); }}
                   className={({ isActive }) => `
                     flex items-center p-3 rounded-lg group transition-colors relative overflow-hidden
-                    ${isActive 
-                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 dark:from-green-900/20 dark:to-emerald-900/20 dark:text-green-400' 
+                    ${isActive
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 dark:from-green-900/20 dark:to-emerald-900/20 dark:text-green-400'
                       : 'text-gray-900 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
                 >
                   <item.icon size={22} className={`shrink-0 transition-colors ${isOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {isOpen && <span>{item.label}</span>}
-                  
-                  {/* Active Indicator Strip */}
-                  <NavLink to={item.path} end={item.path === '/student'}>
-                    {({ isActive }) => isActive && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500 rounded-r-full" />
-                    )}
-                  </NavLink>
+                  {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
                 </NavLink>
               </li>
             ))}
@@ -83,15 +87,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Bottom Section */}
         <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-700">
-          <button 
+          <button
             onClick={logout}
-            className={`
-              flex items-center w-full p-3 text-gray-900 rounded-lg dark:text-white hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors group
-              ${!isOpen && 'justify-center'}
-            `}
+            className={`flex items-center w-full p-3 text-gray-900 rounded-lg dark:text-white hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors group ${!isOpen && 'justify-center'}`}
           >
             <LogOut size={22} className={`shrink-0 ${isOpen ? 'mr-3' : ''}`} />
-            {isOpen && <span>Sign Out</span>}
+            {isOpen && <span className="whitespace-nowrap">Sign Out</span>}
           </button>
         </div>
       </div>

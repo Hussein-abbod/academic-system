@@ -10,7 +10,7 @@ engine = create_engine(
     settings.DATABASE_URL,
     connect_args=connect_args,
     pool_pre_ping=True if not settings.DATABASE_URL.startswith("sqlite") else False,
-    echo=True  # Set to False in production
+    echo=False
 )
 
 # Create SessionLocal class for database sessions

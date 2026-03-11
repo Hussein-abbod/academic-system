@@ -3,11 +3,8 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from config import settings
 
-# Temporary: Using SHA256 instead of bcrypt due to compatibility issues
-# TODO: Fix bcrypt compatibility with Python 3.12.1
-
 def hash_password(password: str) -> str:
-    """Hash a password using SHA256 (temporary workaround)"""
+    """Hash a password using SHA256"""
     return hashlib.sha256(password.encode()).hexdigest()
 
 

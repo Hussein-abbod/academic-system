@@ -4,12 +4,22 @@ from sqlalchemy.orm import sessionmaker
 from config import settings
 
 # Create database engine
-# For SQLite, we need connect_args with check_same_thread=False
-connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+db_url = settings.DATABASE_URL
+connect_args = {}
+
+if db_url.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+else:
+    # Aiven appending ?sslmode=require crashes PyMySQL. We strip it and pass {"ssl": {}} instead
+    if "sslmode=" in db_url:
+        import re
+        db_url = re.sub(r'[?&]sslmode=[^&]+', '', db_url)
+        connect_args["ssl"] = {}
+
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args=connect_args,
-    pool_pre_ping=True if not settings.DATABASE_URL.startswith("sqlite") else False,
+    pool_pre_ping=True if not db_url.startswith("sqlite") else False,
     echo=False
 )
 

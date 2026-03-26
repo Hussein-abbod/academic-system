@@ -14,8 +14,8 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 _COOKIE_ARGS = dict(
     key="access_token",
     httponly=True,
-    samesite="lax",
-    secure=False,          # Set to True in production (HTTPS required)
+    samesite="none",        # Required for Cross-Origin (Frontend on Vercel, Backend on Render)
+    secure=True,            # Always True for SameSite=None (Requires HTTPS)
     path="/",
     max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
 )

@@ -11,11 +11,9 @@ class CourseCreate(BaseModel):
     name: str
     description: Optional[str] = None
     teacher_id: Optional[str] = None
-    capacity: int = 20
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    schedule_days: Optional[str] = None
     price: float
 
 
@@ -25,10 +23,9 @@ class CourseUpdate(BaseModel):
     description: Optional[str] = None
     teacher_id: Optional[str] = None
     capacity: Optional[int] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    schedule_days: Optional[str] = None
     price: Optional[float] = None
     is_active: Optional[bool] = None
 
@@ -40,10 +37,9 @@ class CourseResponse(BaseModel):
     description: Optional[str] = None
     teacher_id: Optional[str] = None
     capacity: int
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    schedule_days: Optional[str] = None
     price: float
     is_active: bool
     
@@ -75,6 +71,7 @@ class EnrollmentResponse(BaseModel):
     course_price: Optional[float] = None
     student_name: Optional[str] = None
     student_email: Optional[str] = None
+    student_phone: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -143,6 +140,7 @@ class QuestionCreate(BaseModel):
     question_type: str = "MCQ"       # MCQ | LISTENING | SHORT_ANSWER
     question_text: str
     audio_file_path: Optional[str] = None
+    question_image_path: Optional[str] = None
     points: float = 1.0
     order_index: int = 0
     options: Optional[list[OptionCreate]] = None
@@ -153,6 +151,7 @@ class QuestionUpdate(BaseModel):
     question_type: Optional[str] = None
     question_text: Optional[str] = None
     audio_file_path: Optional[str] = None
+    question_image_path: Optional[str] = None
     points: Optional[float] = None
     order_index: Optional[int] = None
     options: Optional[list[OptionCreate]] = None
@@ -165,6 +164,7 @@ class QuestionResponse(BaseModel):
     question_type: str
     question_text: str
     audio_file_path: Optional[str] = None
+    question_image_path: Optional[str] = None
     points: float
     order_index: int
     options: list[OptionResponse] = []

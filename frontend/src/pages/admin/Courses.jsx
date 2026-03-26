@@ -1,30 +1,92 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Edit2, Trash2, BookOpen, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../utils/api';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { Input, Select, TextArea, Checkbox } from '../../components/ui/forms';
+import { Input, TextArea, Checkbox } from '../../components/ui/forms';
 import SearchableSelect from '../../components/ui/SearchableSelect';
+
+const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+// Days picker: comma-separated string <-> array of day strings
+const parseDays = (str) => (str ? str.split(',').filter(Boolean) : []);
+const serializeDays = (arr) => arr.join(',');
+
+const DayPicker = ({ value, onChange }) => {
+  const selected = parseDays(value);
+  const toggle = (day) => {
+    const next = selected.includes(day)
+      ? selected.filter((d) => d !== day)
+      : [...selected, day];
+    // preserve week order
+    onChange(serializeDays(ALL_DAYS.filter((d) => next.includes(d))));
+  };
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <Calendar className="inline w-4 h-4 mr-1 mb-0.5 text-blue-500" />
+        Schedule Days
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {ALL_DAYS.map((day) => {
+          const active = selected.includes(day);
+          return (
+            <button
+              key={day}
+              type="button"
+              onClick={() => toggle(day)}
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all duration-150 select-none ${
+                active
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                  : 'bg-transparent border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500'
+              }`}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const ScheduleBadges = ({ days }) => {
+  const list = parseDays(days);
+  if (!list.length) return <span className="text-gray-400 text-sm">Not set</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {list.map((d) => (
+        <span
+          key={d}
+          className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+        >
+          {d}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const defaultForm = () => ({
+  name: '',
+  description: '',
+  teacher_id: '',
+  schedule_days: '',
+  start_time: '',
+  end_time: '',
+  price: 0,
+  is_active: true,
+});
 
 const Courses = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-
-    teacher_id: '',
-    capacity: 20,
-    start_time: '',
-    end_time: '',
-    price: 0,
-    is_active: true
-  });
+  const [formData, setFormData] = useState(defaultForm());
 
   const queryClient = useQueryClient();
 
@@ -36,8 +98,6 @@ const Courses = () => {
       return response.data;
     }
   });
-
-
 
   // Fetch teachers for dropdown
   const { data: teachers = [] } = useQuery({
@@ -58,7 +118,7 @@ const Courses = () => {
       queryClient.invalidateQueries(['admin-courses']);
       toast.success('Course created successfully!');
       setIsCreateModalOpen(false);
-      resetForm();
+      setFormData(defaultForm());
     },
     onError: (error) => {
       toast.error(error.response?.data?.detail || 'Failed to create course');
@@ -76,7 +136,7 @@ const Courses = () => {
       toast.success('Course updated successfully!');
       setIsEditModalOpen(false);
       setSelectedCourse(null);
-      resetForm();
+      setFormData(defaultForm());
     },
     onError: (error) => {
       toast.error(error.response?.data?.detail || 'Failed to update course');
@@ -99,22 +159,8 @@ const Courses = () => {
     }
   });
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-
-      teacher_id: '',
-      capacity: 20,
-      start_time: '',
-      end_time: '',
-      price: 0,
-      is_active: true
-    });
-  };
-
   const handleCreate = () => {
-    resetForm();
+    setFormData(defaultForm());
     setIsCreateModalOpen(true);
   };
 
@@ -123,13 +169,12 @@ const Courses = () => {
     setFormData({
       name: course.name,
       description: course.description || '',
-
       teacher_id: course.teacher_id || '',
-      capacity: course.capacity,
+      schedule_days: course.schedule_days || '',
       start_time: course.start_time || '',
       end_time: course.end_time || '',
       price: course.price,
-      is_active: course.is_active
+      is_active: course.is_active,
     });
     setIsEditModalOpen(true);
   };
@@ -139,22 +184,23 @@ const Courses = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  const buildSubmitData = (data) => {
+    const out = { ...data };
+    if (!out.teacher_id) delete out.teacher_id;
+    if (!out.start_time) delete out.start_time;
+    if (!out.end_time) delete out.end_time;
+    if (!out.schedule_days) delete out.schedule_days;
+    return out;
+  };
+
   const handleSubmitCreate = (e) => {
     e.preventDefault();
-    const submitData = { ...formData };
-    if (!submitData.teacher_id) delete submitData.teacher_id;
-    if (!submitData.start_time) delete submitData.start_time;
-    if (!submitData.end_time) delete submitData.end_time;
-    createMutation.mutate(submitData);
+    createMutation.mutate(buildSubmitData(formData));
   };
 
   const handleSubmitEdit = (e) => {
     e.preventDefault();
-    const submitData = { ...formData };
-    if (!submitData.teacher_id) delete submitData.teacher_id;
-    if (!submitData.start_time) delete submitData.start_time;
-    if (!submitData.end_time) delete submitData.end_time;
-    updateMutation.mutate({ id: selectedCourse.id, data: submitData });
+    updateMutation.mutate({ id: selectedCourse.id, data: buildSubmitData(formData) });
   };
 
   const handleConfirmDelete = () => {
@@ -172,7 +218,6 @@ const Courses = () => {
         </div>
       )
     },
-
     {
       header: 'Teacher',
       accessorKey: 'teacher_id',
@@ -182,9 +227,9 @@ const Courses = () => {
       }
     },
     {
-      header: 'Capacity',
-      accessorKey: 'capacity',
-      cell: (row) => <span>{row.capacity} students</span>
+      header: 'Schedule',
+      accessorKey: 'schedule_days',
+      cell: (row) => <ScheduleBadges days={row.schedule_days} />
     },
     {
       header: 'Time',
@@ -205,7 +250,7 @@ const Courses = () => {
       accessorKey: 'is_active',
       cell: (row) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          row.is_active 
+          row.is_active
             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
         }`}>
@@ -269,20 +314,16 @@ const Courses = () => {
       {/* Create Modal */}
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => { setIsCreateModalOpen(false); setFormData(defaultForm()); }}
         title="Create New Course"
         size="lg"
       >
         <CourseForm
           formData={formData}
           setFormData={setFormData}
-
           teachers={teachers}
           onSubmit={handleSubmitCreate}
-          onCancel={() => {
-            setIsCreateModalOpen(false);
-            resetForm();
-          }}
+          onCancel={() => { setIsCreateModalOpen(false); setFormData(defaultForm()); }}
           isLoading={createMutation.isPending}
         />
       </Modal>
@@ -290,25 +331,16 @@ const Courses = () => {
       {/* Edit Modal */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedCourse(null);
-          resetForm();
-        }}
+        onClose={() => { setIsEditModalOpen(false); setSelectedCourse(null); setFormData(defaultForm()); }}
         title="Edit Course"
         size="lg"
       >
         <CourseForm
           formData={formData}
           setFormData={setFormData}
-
           teachers={teachers}
           onSubmit={handleSubmitEdit}
-          onCancel={() => {
-            setIsEditModalOpen(false);
-            setSelectedCourse(null);
-            resetForm();
-          }}
+          onCancel={() => { setIsEditModalOpen(false); setSelectedCourse(null); setFormData(defaultForm()); }}
           isLoading={updateMutation.isPending}
         />
       </Modal>
@@ -316,10 +348,7 @@ const Courses = () => {
       {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setSelectedCourse(null);
-        }}
+        onClose={() => { setIsDeleteDialogOpen(false); setSelectedCourse(null); }}
         onConfirm={handleConfirmDelete}
         title="Delete Course"
         message={`Are you sure you want to delete "${selectedCourse?.name}"? This action cannot be undone.`}
@@ -350,41 +379,22 @@ const CourseForm = ({ formData, setFormData, teachers, onSubmit, onCancel, isLoa
       rows={3}
     />
 
-    <div className="grid grid-cols-2 gap-4">
+    <SearchableSelect
+      label="Teacher"
+      value={formData.teacher_id}
+      onChange={(value) => setFormData({ ...formData, teacher_id: value })}
+      options={[
+        { value: '', label: 'No Teacher' },
+        ...teachers.map(teacher => ({ value: teacher.id, label: teacher.full_name }))
+      ]}
+      placeholder="Select or search teacher..."
+    />
 
-
-      <SearchableSelect
-        label="Teacher"
-        value={formData.teacher_id}
-        onChange={(value) => setFormData({ ...formData, teacher_id: value })}
-        options={[
-          { value: '', label: 'No Teacher' },
-          ...teachers.map(teacher => ({ value: teacher.id, label: teacher.full_name }))
-        ]}
-        placeholder="Select or search teacher..."
-      />
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <Input
-        label="Capacity"
-        type="number"
-        required
-        value={formData.capacity}
-        onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-        min="1"
-      />
-
-      <Input
-        label="Monthly Price ($)"
-        type="number"
-        required
-        value={formData.price}
-        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-        min="0"
-        step="0.01"
-      />
-    </div>
+    {/* Day picker */}
+    <DayPicker
+      value={formData.schedule_days}
+      onChange={(val) => setFormData({ ...formData, schedule_days: val })}
+    />
 
     <div className="grid grid-cols-2 gap-4">
       <Input
@@ -401,6 +411,16 @@ const CourseForm = ({ formData, setFormData, teachers, onSubmit, onCancel, isLoa
         onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
       />
     </div>
+
+    <Input
+      label="Monthly Price ($)"
+      type="number"
+      required
+      value={formData.price}
+      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+      min="0"
+      step="0.01"
+    />
 
     <Checkbox
       label="Active"

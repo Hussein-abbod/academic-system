@@ -216,6 +216,16 @@ async def submit_quiz(
                 is_correct = opt.is_correct
                 points_awarded = q.points if is_correct else 0.0
 
+        elif q.question_type == "SHORT_ANSWER" and answer_data.short_answer_text:
+            # For SHORT_ANSWER, the correct text is stored as an option with is_correct=True
+            correct_opt = next((o for o in q.options if o.is_correct), None)
+            if correct_opt and correct_opt.option_text:
+                expected = correct_opt.option_text.strip().lower()
+                provided = answer_data.short_answer_text.strip().lower()
+                # Basic string match
+                is_correct = (expected == provided)
+                points_awarded = q.points if is_correct else 0.0
+        
         if is_correct:
             total_score += points_awarded
 

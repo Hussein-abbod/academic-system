@@ -43,6 +43,9 @@ async def get_my_courses(
         if enrollment.course:
             enrollment_dict["course_name"] = enrollment.course.name
             enrollment_dict["course_price"] = float(enrollment.course.price) if enrollment.course.price is not None else 0.0
+            enrollment_dict["schedule_days"] = enrollment.course.schedule_days or ""
+            enrollment_dict["start_time"] = enrollment.course.start_time or ""
+            enrollment_dict["end_time"] = enrollment.course.end_time or ""
             
         results.append(enrollment_dict)
         

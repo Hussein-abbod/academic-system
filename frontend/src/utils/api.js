@@ -5,30 +5,16 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Required for HttpOnly cookies to be sent/received automatically
+  withCredentials: true,
 });
 
-// Request interceptor to add JWT token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for error handling
+// Response interceptor — redirect to login on 401 (session expired or not logged in)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
+    if (error.response?.status === 401 && window.location.pathname !== '/login') {
+      // Do not touch localStorage — the HttpOnly cookie is cleared by the server logout endpoint
       window.location.href = '/login';
     }
     return Promise.reject(error);

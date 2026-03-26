@@ -39,9 +39,11 @@ async def get_my_students(
             if student:
                 resp.student_name = student.full_name
                 resp.student_email = student.email
+                resp.student_phone = student.phone_number
         else:
             resp.student_name = enrollment.student.full_name
             resp.student_email = enrollment.student.email
+            resp.student_phone = enrollment.student.phone_number
             
         if enrollment.course:
             resp.course_name = enrollment.course.name

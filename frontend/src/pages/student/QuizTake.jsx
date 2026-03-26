@@ -125,7 +125,7 @@ export default function QuizTake() {
   const [quiz, setQuiz] = useState(null);
   const [submissionId, setSubmissionId] = useState(null);
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState({});   // questionId → optionId
+  const [answers, setAnswers] = useState({});   // questionId → optionId (MCQ) or string (SHORT_ANSWER)
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState(null); // enlarged image URL
@@ -153,7 +153,8 @@ export default function QuizTake() {
       const payload = {
         answers: (quiz?.questions || []).map(q => ({
           question_id: q.id,
-          selected_option_id: answers[q.id] || null
+          selected_option_id: q.question_type === 'SHORT_ANSWER' ? null : (answers[q.id] || null),
+          short_answer_text: q.question_type === 'SHORT_ANSWER' ? (answers[q.id] || '') : null,
         }))
       };
       const res = await api.post(`/student/submissions/${submissionId}/submit`, payload);
@@ -254,6 +255,11 @@ export default function QuizTake() {
                     <Volume2 size={10} /> Listening
                   </span>
                 )}
+                {q.question_type === 'SHORT_ANSWER' && (
+                  <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                    ✏ Spelling
+                  </span>
+                )}
               </div>
 
               {/* Audio player */}
@@ -269,11 +275,37 @@ export default function QuizTake() {
               )}
 
               {/* Question text */}
-              <p className="text-gray-900 dark:text-white font-medium text-base leading-relaxed mb-6">
+              <p className="text-gray-900 dark:text-white font-medium text-base leading-relaxed mb-4">
                 {q.question_text}
               </p>
 
-              {/* Options */}
+              {/* Question image */}
+              {q.question_image_path && (
+                <div className="mb-4">
+                  <img
+                    src={`http://localhost:8000${q.question_image_path}`}
+                    alt="question"
+                    className="max-h-48 rounded-xl border border-gray-200 dark:border-gray-700 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setLightboxSrc(`http://localhost:8000${q.question_image_path}`)}
+                    title="Click to enlarge"
+                  />
+                </div>
+              )}
+
+              {/* Options or short answer */}
+              {q.question_type === 'SHORT_ANSWER' ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Type your answer below:</p>
+                  <input
+                    type="text"
+                    value={answers[q.id] || ''}
+                    onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                    placeholder="Your answer…"
+                    autoFocus
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-900 outline-none transition text-base"
+                  />
+                </div>
+              ) : (
               <div className="space-y-3">
                 {(q.options || []).map((opt) => {
                   const selected = answers[q.id] === opt.id;
@@ -302,11 +334,10 @@ export default function QuizTake() {
                               alt="option"
                               className="max-h-28 rounded-lg object-contain"
                             />
-                            {/* Expand / zoom button */}
                             <button
                               type="button"
                               onClick={(e) => {
-                                e.stopPropagation(); // don't select the option
+                                e.stopPropagation();
                                 setLightboxSrc(`http://localhost:8000${opt.option_image_path}`);
                               }}
                               className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
@@ -323,6 +354,7 @@ export default function QuizTake() {
                   );
                 })}
               </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

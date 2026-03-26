@@ -154,13 +154,14 @@ const MyPayments = () => {
                     </p>
                 </div>
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                        {summary.remaining > 0 ? 'Remaining Balance' : 'Excess Payment / Credit'}
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Balance Due</p>
+                    <p className={`text-2xl font-bold ${summary.remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        ${summary.remaining.toFixed(2)}
                     </p>
-                    <p className={`text-2xl font-bold ${summary.remaining > 0 ? 'text-red-600' : 'text-purple-600'}`}>
-                        ${summary.remaining > 0
-                            ? summary.remaining.toFixed(2)
-                            : summary.overpayment.toFixed(2)}
+                    <p className="text-xs mt-1">
+                        {summary.remaining > 0
+                            ? <span className="text-red-500 font-semibold">⚠ Payment overdue</span>
+                            : <span className="text-green-500 font-semibold">✓ All paid up</span>}
                     </p>
                 </div>
             </div>

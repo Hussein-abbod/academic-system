@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 const Profile = () => {
-    const { user, login, logout } = useAuth();
+    const { user, setUser, login, logout } = useAuth();
 
     const [form, setForm] = useState({
         full_name: user?.full_name || '',
@@ -39,10 +39,8 @@ const Profile = () => {
             return res.data;
         },
         onSuccess: (updatedUser) => {
-            // Update localStorage so the navbar reflects new name
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            // Force a page reload to refresh AuthContext from localStorage
-            window.location.reload();
+            // Update AuthContext state directly — no localStorage or page reload needed
+            setUser(updatedUser);
             toast.success('Profile updated successfully!');
         },
         onError: (err) => {
@@ -72,12 +70,13 @@ const Profile = () => {
     });
 
     const isStudent = user?.role === 'STUDENT';
+    const isNameReadonly = user?.role === 'STUDENT' || user?.role === 'TEACHER';
 
     const handleProfileSave = (e) => {
         e.preventDefault();
         const payload = { phone_number: form.phone_number.trim() || null };
-        // Students cannot change their name — only admins can
-        if (!isStudent) payload.full_name = form.full_name.trim();
+        // Only admins can change names
+        if (!isNameReadonly) payload.full_name = form.full_name.trim();
         profileMutation.mutate(payload);
     };
 
@@ -87,8 +86,12 @@ const Profile = () => {
             toast.error('New passwords do not match.');
             return;
         }
-        if (pwForm.new_password.length < 3) {
-            toast.error('New password must be at least 3 characters.');
+        if (pwForm.new_password.length < 8) {
+            toast.error('New password must be at least 8 characters.');
+            return;
+        }
+        if (!/[A-Z]/.test(pwForm.new_password) || !/[0-9]/.test(pwForm.new_password)) {
+            toast.error('Password must contain at least one uppercase letter and one number.');
             return;
         }
         passwordMutation.mutate({
@@ -147,15 +150,15 @@ const Profile = () => {
                         type="text"
                         required
                         value={form.full_name}
-                        disabled={isStudent}
-                        onChange={(e) => !isStudent && setForm({ ...form, full_name: e.target.value })}
+                        disabled={isNameReadonly}
+                        onChange={(e) => !isNameReadonly && setForm({ ...form, full_name: e.target.value })}
                         className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                            isStudent
+                            isNameReadonly
                                 ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                 : 'border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700'
                         }`}
                     />
-                    {isStudent && (
+                    {isNameReadonly && (
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                             🔒 Name can only be changed by an admin. Please contact your administrator.
                         </p>

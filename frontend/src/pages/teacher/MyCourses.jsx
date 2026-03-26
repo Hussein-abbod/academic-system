@@ -38,7 +38,7 @@ const MyCourses = () => {
         <div className="flex flex-col text-sm text-gray-500">
           <span className="flex items-center gap-1 font-medium text-gray-700 dark:text-gray-300">
             <Calendar size={14} />
-            {new Date(row.start_date).toLocaleDateString()} - {new Date(row.end_date).toLocaleDateString()}
+            {row.schedule_days ? row.schedule_days.split(',').join(', ') : 'No days set'}
           </span>
           {(row.start_time || row.end_time) && (
             <span className="text-xs mt-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md inline-block w-fit">

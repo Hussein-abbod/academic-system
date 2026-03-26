@@ -26,6 +26,7 @@ const newMCQ = () => ({
   points: 1,
   order_index: 0,
   audio_file_path: null,
+  question_image_path: null,
   options: [newOption(0), newOption(1), newOption(2), newOption(3)],
 });
 const newListening = () => ({
@@ -35,9 +36,21 @@ const newListening = () => ({
   points: 1,
   order_index: 0,
   audio_file_path: null,
+  question_image_path: null,
   _audioFile: null,
   _audioUploading: false,
   options: [newOption(0), newOption(1), newOption(2), newOption(3)],
+});
+const newShortAnswer = () => ({
+  id: `q-${Date.now()}`,
+  question_type: 'SHORT_ANSWER',
+  question_text: '',
+  correct_answer: '',
+  points: 1,
+  order_index: 0,
+  audio_file_path: null,
+  question_image_path: null,
+  options: [],
 });
 
 // ─── QuizInfoPanel ─────────────────────────────────────────────────────────────
@@ -231,9 +244,30 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
 
   const typeColor = question.question_type === 'LISTENING'
     ? 'from-blue-500 to-cyan-500'
+    : question.question_type === 'SHORT_ANSWER'
+    ? 'from-emerald-500 to-teal-500'
     : 'from-purple-500 to-indigo-500';
-  const typeLabel = question.question_type === 'LISTENING' ? 'Listening' : 'Multiple Choice';
-  const TypeIcon = question.question_type === 'LISTENING' ? Volume2 : List;
+  const typeLabel = question.question_type === 'LISTENING' ? 'Listening'
+    : question.question_type === 'SHORT_ANSWER' ? 'Spelling / Short Answer'
+    : 'Multiple Choice';
+  const TypeIcon = question.question_type === 'LISTENING' ? Volume2
+    : question.question_type === 'SHORT_ANSWER' ? Mic
+    : List;
+
+  // Question image upload handler
+  const handleQuestionImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await api.post('/api/uploads/image', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      onChange({ ...question, question_image_path: res.data.url });
+      toast.success('Image uploaded!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Image upload failed');
+    }
+  };
 
   return (
     <motion.div
@@ -285,8 +319,34 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
         value={question.question_text}
         onChange={e => onChange({ ...question, question_text: e.target.value })}
         placeholder="Type your question here…"
-        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none transition resize-none text-sm mb-4"
+        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none transition resize-none text-sm mb-3"
       />
+
+      {/* Question image (optional) */}
+      <div className="mb-4">
+        {question.question_image_path ? (
+          <div className="flex items-center gap-2 mb-1">
+            <img
+              src={`http://localhost:8000${question.question_image_path}`}
+              alt="question"
+              className="h-24 rounded-lg border border-gray-200 dark:border-gray-600 object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => onChange({ ...question, question_image_path: null })}
+              className="p-1 text-red-400 hover:text-red-600"
+              title="Remove image"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <label className="flex items-center gap-1.5 py-1.5 px-3 w-fit border border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-400 transition-colors text-xs text-gray-500 dark:text-gray-400">
+            <Image size={13} /> Add question image (optional)
+            <input type="file" accept="image/*" className="hidden" onChange={handleQuestionImageUpload} />
+          </label>
+        )}
+      </div>
 
       {/* Audio upload (Listening only) */}
       {question.question_type === 'LISTENING' && (
@@ -318,113 +378,131 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
         </div>
       )}
 
-      {/* Options */}
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Answer Options</p>
-        {question.options.map((opt) => (
-          <div key={opt.id} className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 p-2.5">
-            {/* Option row: correct radio + type toggle + input + delete */}
-            <div className="flex items-center gap-2">
-              {/* Correct answer indicator */}
-              <button
-                type="button"
-                onClick={() => setCorrect(opt.id)}
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                  opt.is_correct
-                    ? 'border-emerald-500 bg-emerald-500'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
-                }`}
-              >
-                {opt.is_correct && <CheckCircle size={12} className="text-white" />}
-              </button>
+      {/* SHORT_ANSWER: single correct answer field */}
+      {question.question_type === 'SHORT_ANSWER' && (
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-1">
+            <CheckCircle size={12} /> Correct Answer (student must type this exactly)
+          </p>
+          <input
+            value={question.correct_answer || ''}
+            onChange={e => onChange({ ...question, correct_answer: e.target.value })}
+            placeholder="e.g. photosynthesis"
+            className="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition"
+          />
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Matching is case-insensitive.</p>
+        </div>
+      )}
 
-              {/* Text / Image type toggle */}
-              <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 shrink-0">
+      {/* MCQ / Listening options */}
+      {question.question_type !== 'SHORT_ANSWER' && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Answer Options</p>
+          {question.options.map((opt) => (
+            <div key={opt.id} className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 p-2.5">
+              {/* Option row: correct radio + type toggle + input + delete */}
+              <div className="flex items-center gap-2">
+                {/* Correct answer indicator */}
                 <button
                   type="button"
-                  onClick={() => toggleOptionType(opt.id, 'text')}
-                  className={`px-2 py-1 text-xs font-medium transition-colors flex items-center gap-1 ${
-                    (opt.option_type || 'text') === 'text'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white dark:bg-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  onClick={() => setCorrect(opt.id)}
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                    opt.is_correct
+                      ? 'border-emerald-500 bg-emerald-500'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
                   }`}
                 >
-                  <List size={11} /> Text
+                  {opt.is_correct && <CheckCircle size={12} className="text-white" />}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => toggleOptionType(opt.id, 'image')}
-                  className={`px-2 py-1 text-xs font-medium transition-colors flex items-center gap-1 ${
-                    (opt.option_type || 'text') === 'image'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white dark:bg-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <Image size={11} /> Image
-                </button>
-              </div>
 
-              {/* Text input or image upload */}
-              {(opt.option_type || 'text') === 'text' ? (
-                <input
-                  value={opt.option_text}
-                  onChange={e => setOptionText(opt.id, e.target.value)}
-                  placeholder={`Option ${question.options.indexOf(opt) + 1}`}
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 outline-none transition"
-                />
-              ) : (
-                <div className="flex-1">
-                  {opt.option_image_path ? (
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={`http://localhost:8000${opt.option_image_path}`}
-                        alt="option"
-                        className="h-12 w-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => onChange({ ...question, options: question.options.map(o => o.id === opt.id ? { ...o, option_image_path: null } : o) })}
-                        className="p-1 text-red-400 hover:text-red-600"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex items-center justify-center gap-1 py-1.5 px-3 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-lg cursor-pointer hover:border-purple-500 transition-colors text-xs text-purple-600 dark:text-purple-400">
-                      <Image size={13} /> Upload image…
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={e => handleOptionImageUpload(opt.id, e.target.files[0])}
-                      />
-                    </label>
-                  )}
+                {/* Text / Image type toggle */}
+                <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleOptionType(opt.id, 'text')}
+                    className={`px-2 py-1 text-xs font-medium transition-colors flex items-center gap-1 ${
+                      (opt.option_type || 'text') === 'text'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <List size={11} /> Text
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleOptionType(opt.id, 'image')}
+                    className={`px-2 py-1 text-xs font-medium transition-colors flex items-center gap-1 ${
+                      (opt.option_type || 'text') === 'image'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <Image size={11} /> Image
+                  </button>
                 </div>
-              )}
 
-              {/* Delete option */}
-              {question.options.length > 2 && (
-                <button
-                  onClick={() => removeOption(opt.id)}
-                  className="p-1 text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                >
-                  <X size={14} />
-                </button>
-              )}
+                {/* Text input or image upload */}
+                {(opt.option_type || 'text') === 'text' ? (
+                  <input
+                    value={opt.option_text}
+                    onChange={e => setOptionText(opt.id, e.target.value)}
+                    placeholder={`Option ${question.options.indexOf(opt) + 1}`}
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 outline-none transition"
+                  />
+                ) : (
+                  <div className="flex-1">
+                    {opt.option_image_path ? (
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={`http://localhost:8000${opt.option_image_path}`}
+                          alt="option"
+                          className="h-12 w-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onChange({ ...question, options: question.options.map(o => o.id === opt.id ? { ...o, option_image_path: null } : o) })}
+                          className="p-1 text-red-400 hover:text-red-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center justify-center gap-1 py-1.5 px-3 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-lg cursor-pointer hover:border-purple-500 transition-colors text-xs text-purple-600 dark:text-purple-400">
+                        <Image size={13} /> Upload image…
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => handleOptionImageUpload(opt.id, e.target.files[0])}
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {/* Delete option */}
+                {question.options.length > 2 && (
+                  <button
+                    onClick={() => removeOption(opt.id)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-        {question.options.length < 6 && (
-          <button
-            type="button"
-            onClick={addOption}
-            className="text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 mt-1"
-          >
-            <Plus size={12} /> Add option
-          </button>
-        )}
-      </div>
+          ))}
+          {question.options.length < 6 && (
+            <button
+              type="button"
+              onClick={addOption}
+              className="text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 mt-1"
+            >
+              <Plus size={12} /> Add option
+            </button>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -472,11 +550,17 @@ export default function QuizBuilder() {
         description: existingQuiz.description || ''
       });
       // Map existing questions to local state format
-      setQuestions(existingQuiz.questions.map(q => ({
-        ...q,
-        id: q.id || `q-${Date.now()}`,
-        options: (q.options || []).map((o, i) => ({ ...o, id: o.id || `opt-${Date.now()}-${i}` }))
-      })));
+      setQuestions(existingQuiz.questions.map(q => {
+        const isShortAnswer = q.question_type === 'SHORT_ANSWER';
+        const correctOpt = isShortAnswer ? (q.options || []).find(o => o.is_correct) : null;
+        
+        return {
+          ...q,
+          id: q.id || `q-${Date.now()}`,
+          correct_answer: isShortAnswer ? (correctOpt?.option_text || '') : '',
+          options: isShortAnswer ? [] : (q.options || []).map((o, i) => ({ ...o, id: o.id || `opt-${Date.now()}-${i}` }))
+        };
+      }));
     }
   }, [existingQuiz]);
 
@@ -497,14 +581,17 @@ export default function QuizBuilder() {
         question_type: q.question_type,
         question_text: q.question_text || 'Untitled question',
         audio_file_path: q.audio_file_path || null,
+        question_image_path: q.question_image_path || null,
         points: q.points || 1,
         order_index: i,
-        options: (q.options || []).map((o, j) => ({
-          option_text: o.option_text || '',
-          option_image_path: o.option_image_path || null,
-          is_correct: Boolean(o.is_correct),
-          order_index: j,
-        }))
+        options: q.question_type === 'SHORT_ANSWER'
+          ? [{ option_text: q.correct_answer || '', is_correct: true, order_index: 0 }]
+          : (q.options || []).map((o, j) => ({
+              option_text: o.option_text || '',
+              option_image_path: o.option_image_path || null,
+              is_correct: Boolean(o.is_correct),
+              order_index: j,
+            })),
       });
     }
   };
@@ -672,20 +759,27 @@ export default function QuizBuilder() {
           </DragDropContext>
 
           {/* Add question buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 flex-wrap">
             <button
               onClick={() => setQuestions(qs => [...qs, { ...newMCQ(), order_index: qs.length }])}
-              className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all font-medium text-sm"
+              className="flex-1 min-w-[150px] flex items-center justify-center gap-2 py-3 border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all font-medium text-sm"
             >
               <Plus size={16} />
               Add MCQ Question
             </button>
             <button
               onClick={() => setQuestions(qs => [...qs, { ...newListening(), order_index: qs.length }])}
-              className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all font-medium text-sm"
+              className="flex-1 min-w-[150px] flex items-center justify-center gap-2 py-3 border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all font-medium text-sm"
             >
               <Volume2 size={16} />
               Add Listening Question
+            </button>
+            <button
+              onClick={() => setQuestions(qs => [...qs, { ...newShortAnswer(), order_index: qs.length }])}
+              className="flex-1 min-w-[150px] flex items-center justify-center gap-2 py-3 border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all font-medium text-sm"
+            >
+              <Mic size={16} />
+              Add Spelling Question
             </button>
           </div>
 

@@ -199,6 +199,7 @@ async def add_question(
         question_type=question_data.question_type,
         question_text=question_data.question_text,
         audio_file_path=question_data.audio_file_path,
+        question_image_path=question_data.question_image_path,
         points=question_data.points,
         order_index=question_data.order_index if question_data.order_index else max_order + 1,
     )

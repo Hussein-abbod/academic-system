@@ -116,9 +116,9 @@ const CourseDetails = () => {
                         <Calendar size={20} />
                      </div>
                      <div>
-                        <p className="text-sm text-gray-500">Duration</p>
+                        <p className="text-sm text-gray-500">Scheduled Days</p>
                         <p className="font-medium text-gray-900 dark:text-gray-200">
-                            {new Date(course?.start_date).toLocaleDateString()} - {new Date(course?.end_date).toLocaleDateString()}
+                            {course?.schedule_days ? course.schedule_days.split(',').join(', ') : 'No days set'}
                         </p>
                      </div>
                    </div>

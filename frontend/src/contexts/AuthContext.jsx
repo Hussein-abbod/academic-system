@@ -16,47 +16,43 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
-    const token = localStorage.getItem('access_token');
-    const savedUser = localStorage.getItem('user');
-    
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    // Restore session by calling /auth/me — the HttpOnly cookie is sent automatically.
+    // No localStorage needed; the browser manages the cookie.
+    api.get('/auth/me')
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password, role) => {
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password,
-        role
-      });
-      
-      const { access_token, user: userData } = response.data;
-      
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      
+      const response = await api.post('/auth/login', { email, password, role });
+      // The server sets the HttpOnly cookie automatically via set-cookie header.
+      // We only store the user object in React state — never in localStorage.
+      setUser(response.data.user);
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.detail || 'Login failed'
+        error: error.response?.data?.detail || 'Login failed',
       };
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      // Ask the server to clear the HttpOnly cookie — JS cannot do this itself.
+      await api.post('/auth/logout');
+    } catch (_) {
+      // Proceed even if the request fails (token may already be expired)
+    }
     setUser(null);
+    window.location.href = '/login';
   };
 
   const value = {
     user,
+    setUser,   // Exposed so Profile can update user state without a page reload
     loading,
     login,
     logout,

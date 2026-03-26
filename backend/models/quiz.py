@@ -91,6 +91,7 @@ class QuizQuestion(Base):
     question_type = Column(SQLEnum(QuestionType), nullable=False, default=QuestionType.MCQ)
     question_text = Column(Text, nullable=False)
     audio_file_path = Column(String(500), nullable=True)   # For LISTENING questions
+    question_image_path = Column(String(500), nullable=True) # For any question with an image
     points = Column(Float, nullable=False, default=1.0)
 
     # Relationships

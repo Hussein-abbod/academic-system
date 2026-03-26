@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// import { Plus, DollarSign, CreditCard, Calendar, User, ChevronRight, X } from 'lucide-react';
+import { AlertCircle, Users, ArrowDownUp } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../utils/api';
 import Table from '../../components/ui/Table';
@@ -31,6 +31,8 @@ const Payments = () => {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [maxAmount, setMaxAmount] = useState(0);
+  const [filter, setFilter] = useState('ALL'); // 'ALL' | 'DUE'
+  const [sortByBalance, setSortByBalance] = useState(true); // always sort desc by default
   
   const [formData, setFormData] = useState({
     enrollment_id: '',
@@ -151,6 +153,19 @@ const Payments = () => {
     return Array.from(map.values());
   }, [enrollmentFinancials]);
 
+  // Apply filter + sort
+  const displayedSummaries = useMemo(() => {
+    let list = filter === 'DUE'
+      ? studentSummaries.filter(s => s.totalBalance > 0)
+      : studentSummaries;
+    if (sortByBalance) {
+      list = [...list].sort((a, b) => b.totalBalance - a.totalBalance);
+    }
+    return list;
+  }, [studentSummaries, filter, sortByBalance]);
+
+  const dueCount = useMemo(() => studentSummaries.filter(s => s.totalBalance > 0).length, [studentSummaries]);
+
   // --- Handlers ---
   const handleViewDetails = (studentId) => {
     setSelectedStudentId(studentId);
@@ -222,15 +237,58 @@ const Payments = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-start gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Management</h1>
           <p className="text-gray-500 dark:text-gray-400">Monthly subscription tracking</p>
         </div>
+
+        {/* Filter tabs + sort toggle */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Filter Tabs */}
+          <div className="flex rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden">
+            <button
+              onClick={() => setFilter('ALL')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors ${
+                filter === 'ALL'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              All ({studentSummaries.length})
+            </button>
+            <button
+              onClick={() => setFilter('DUE')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 dark:border-slate-600 ${
+                filter === 'DUE'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+              }`}
+            >
+              <AlertCircle className="w-4 h-4" />
+              Payment Due ({dueCount})
+            </button>
+          </div>
+
+          {/* Sort by balance toggle */}
+          <button
+            onClick={() => setSortByBalance(prev => !prev)}
+            title="Sort by balance"
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+              sortByBalance
+                ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300'
+                : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+            }`}
+          >
+            <ArrowDownUp className="w-4 h-4" />
+            {sortByBalance ? 'Sorted: Highest Balance' : 'Sort by Balance'}
+          </button>
+        </div>
       </div>
 
       <Table 
-        data={studentSummaries} 
+        data={displayedSummaries} 
         columns={columns} 
         searchable 
         searchKeys={SEARCH_KEYS} 

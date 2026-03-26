@@ -11,6 +11,7 @@ import {
   GraduationCap,
   User,
   ClipboardList,
+  Calendar,
   X
 } from 'lucide-react';
 
@@ -20,6 +21,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/teacher' },
     { icon: BookOpen, label: 'My Courses', path: '/teacher/courses' },
+    { icon: Calendar, label: 'My Schedule', path: '/teacher/schedule' },
     { icon: Users, label: 'My Students', path: '/teacher/students' },
     { icon: ClipboardList, label: 'Quizzes', path: '/teacher/quizzes' },
     { icon: User, label: 'Profile', path: '/teacher/profile' },

@@ -163,17 +163,14 @@ const CourseDetails = () => {
                  <h3 className="text-lg font-medium mb-2">Details</h3>
                  <dl className="space-y-2">
                    <div className="flex justify-between">
-                     <dt className="text-gray-500">Capacity</dt>
-                     <dd className="font-medium">{course?.capacity}</dd>
+                     <dt className="text-gray-500">Students Enrolled</dt>
+                     <dd className="font-medium">{students?.length || 0}</dd>
                    </div>
                    <div className="flex justify-between">
                      <dt className="text-gray-500">Price</dt>
                      <dd className="font-medium">${course?.price}</dd>
                    </div>
-                   <div className="flex justify-between">
-                     <dt className="text-gray-500">Dates</dt>
-                     <dd className="font-medium">{new Date(course?.start_date).toLocaleDateString()} - {new Date(course?.end_date).toLocaleDateString()}</dd>
-                   </div>
+                   
                  </dl>
                </div>
                <div>
@@ -203,7 +200,7 @@ const CourseDetails = () => {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone Number</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -216,7 +213,7 @@ const CourseDetails = () => {
                         {enrollment.student_email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {enrollment.current_progress}%
+                        {enrollment.student_phone || 'N/A'}
                       </td>
                     </tr>
                   ))}

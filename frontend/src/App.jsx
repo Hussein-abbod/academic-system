@@ -23,6 +23,7 @@ import MyStudents from './pages/teacher/MyStudents';
 import QuizList from './pages/teacher/QuizList';
 import QuizBuilder from './pages/teacher/QuizBuilder';
 import QuizResults from './pages/teacher/QuizResults';
+import TeacherSchedule from './pages/teacher/MySchedule';
 
 import StudentLayout from './layouts/StudentLayout';
 import StudentDashboard from './pages/student/Dashboard';
@@ -31,6 +32,7 @@ import StudentCourseDetails from './pages/student/CourseDetails';
 import MyPayments from './pages/student/MyPayments';
 import StudentQuizzes from './pages/student/Quizzes';
 import QuizTake from './pages/student/QuizTake';
+import MySchedule from './pages/student/MySchedule';
 import Profile from './pages/shared/Profile';
 
 const queryClient = new QueryClient({
@@ -86,6 +88,7 @@ function App() {
                 <Route path="quizzes/new" element={<QuizBuilder />} />
                 <Route path="quizzes/:quizId/edit" element={<QuizBuilder />} />
                 <Route path="quizzes/:quizId/results" element={<QuizResults />} />
+                <Route path="schedule" element={<TeacherSchedule />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
 
@@ -101,6 +104,7 @@ function App() {
                 <Route index element={<StudentDashboard />} />
                 <Route path="courses" element={<MyLearning />} />
                 <Route path="courses/:id" element={<StudentCourseDetails />} />
+                <Route path="schedule" element={<MySchedule />} />
                 <Route path="payments" element={<MyPayments />} />
                 <Route path="quizzes" element={<StudentQuizzes />} />
                 <Route path="quizzes/:quizId/take" element={<QuizTake />} />

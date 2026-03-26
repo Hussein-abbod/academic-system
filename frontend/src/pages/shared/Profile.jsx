@@ -21,6 +21,7 @@ const Profile = () => {
     const [form, setForm] = useState({
         full_name: user?.full_name || '',
         phone_number: user?.phone_number || '',
+        email: user?.email || '',
     });
 
     const [pwForm, setPwForm] = useState({
@@ -71,12 +72,14 @@ const Profile = () => {
 
     const isStudent = user?.role === 'STUDENT';
     const isNameReadonly = user?.role === 'STUDENT' || user?.role === 'TEACHER';
+    const isAdmin = user?.role === 'ADMIN';
 
     const handleProfileSave = (e) => {
         e.preventDefault();
         const payload = { phone_number: form.phone_number.trim() || null };
         // Only admins can change names
         if (!isNameReadonly) payload.full_name = form.full_name.trim();
+        if (isAdmin && form.email) payload.email = form.email.trim();
         profileMutation.mutate(payload);
     };
 
@@ -187,11 +190,18 @@ const Profile = () => {
                     </label>
                     <input
                         type="email"
-                        value={user?.email || ''}
-                        disabled
-                        className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                        value={isAdmin ? form.email : (user?.email || '')}
+                        disabled={!isAdmin}
+                        onChange={(e) => isAdmin && setForm({ ...form, email: e.target.value })}
+                        className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            !isAdmin
+                                ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                : 'border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700'
+                        }`}
                     />
-                    <p className="text-xs text-gray-400 mt-1">Email cannot be changed. Contact an admin if needed.</p>
+                    {!isAdmin && (
+                        <p className="text-xs text-gray-400 mt-1">Email cannot be changed. Contact an admin if needed.</p>
+                    )}
                 </div>
 
                 <button

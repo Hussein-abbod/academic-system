@@ -88,9 +88,24 @@ async def update_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update the current user's profile (name, phone, password)."""
+    """Update the current user's profile (name, phone, password, email for admin)."""
     if profile_data.full_name is not None:
         current_user.full_name = profile_data.full_name
+
+    if hasattr(profile_data, "email") and profile_data.email is not None:
+        if current_user.role.value != "ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only administrators can update email addresses."
+            )
+        if profile_data.email != current_user.email:
+            existing_user = db.query(User).filter(User.email == profile_data.email, User.id != current_user.id).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email is already in use by another account."
+                )
+            current_user.email = profile_data.email
 
     if profile_data.phone_number is not None:
         current_user.phone_number = profile_data.phone_number

@@ -33,6 +33,7 @@ class LoginResponse(BaseModel):
 class ProfileUpdate(BaseModel):
     """Schema for updating user profile"""
     full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
     current_password: Optional[str] = None
     new_password: Optional[str] = None

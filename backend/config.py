@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     """Application settings and configuration"""
 
     # Database
-    DATABASE_URL: str = "sqlite:///./academic_system.db"
+    DATABASE_URL: str = "mysql+pymysql://root:@localhost:3306/academic_system"
 
     # JWT Security — SECRET_KEY has NO default. Must be set in .env.
     SECRET_KEY: str
@@ -16,7 +16,6 @@ class Settings(BaseSettings):
     # App mode: set DEBUG=false in production to hide /docs
     DEBUG: bool = False
 
-    # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
 
     # Application

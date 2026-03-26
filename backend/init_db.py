@@ -1,6 +1,5 @@
 from database import SessionLocal, Base, engine
 from models.user import User, UserRole
-from models.level import Level
 from auth.security import hash_password
 
 
@@ -26,33 +25,6 @@ def init_database():
             )
             db.add(admin)
             print("✓ Created default admin user (email: admin@cosmic.academy, password: admin123)")
-        
-        # Check if levels exist
-        levels_exist = db.query(Level).count() > 0
-        
-        if not levels_exist:
-            # Create default levels
-            beginner = Level(
-                name="Beginner",
-                description="Foundation level for English learners",
-                order=1,
-                passing_score_requirement=70
-            )
-            intermediate = Level(
-                name="Intermediate",
-                description="Intermediate level for progressing students",
-                order=2,
-                passing_score_requirement=75
-            )
-            advanced = Level(
-                name="Advanced",
-                description="Advanced level for proficient students",
-                order=3,
-                passing_score_requirement=80
-            )
-            
-            db.add_all([beginner, intermediate, advanced])
-            print("✓ Created default levels (Beginner, Intermediate, Advanced)")
         
         db.commit()
         print("\n✓ Database initialized successfully!")

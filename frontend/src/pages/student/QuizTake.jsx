@@ -8,6 +8,7 @@ import {
   XCircle, Award, RotateCcw, Volume2, Maximize2, X
 } from 'lucide-react';
 import api from '../../utils/api';
+import { getMediaUrl } from '../../utils/mediaUtils';
 
 // ─── Timer ─────────────────────────────────────────────────────────────────────
 function useTimer(seconds, onExpire) {
@@ -269,7 +270,7 @@ export default function QuizTake() {
                   <audio
                     controls
                     className="w-full"
-                    src={`http://localhost:8000${q.audio_file_path}`}
+                    src={getMediaUrl(q.audio_file_path)}
                   />
                 </div>
               )}
@@ -283,10 +284,10 @@ export default function QuizTake() {
               {q.question_image_path && (
                 <div className="mb-4">
                   <img
-                    src={`http://localhost:8000${q.question_image_path}`}
+                    src={getMediaUrl(q.question_image_path)}
                     alt="question"
                     className="max-h-48 rounded-xl border border-gray-200 dark:border-gray-700 object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setLightboxSrc(`http://localhost:8000${q.question_image_path}`)}
+                    onClick={() => setLightboxSrc(getMediaUrl(q.question_image_path))}
                     title="Click to enlarge"
                   />
                 </div>
@@ -330,7 +331,7 @@ export default function QuizTake() {
                         {opt.option_image_path ? (
                           <div className="relative group flex-1">
                             <img
-                              src={`http://localhost:8000${opt.option_image_path}`}
+                              src={getMediaUrl(opt.option_image_path)}
                               alt="option"
                               className="max-h-28 rounded-lg object-contain"
                             />
@@ -338,7 +339,7 @@ export default function QuizTake() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setLightboxSrc(`http://localhost:8000${opt.option_image_path}`);
+                                setLightboxSrc(getMediaUrl(opt.option_image_path));
                               }}
                               className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                               title="View full size"

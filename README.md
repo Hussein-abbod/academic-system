@@ -21,10 +21,11 @@ A modern, professional web-based Academic English Institute Management System wi
 **Backend:**
 
 - FastAPI (Python)
-- PostgreSQL
+- MySQL / XAMPP
 - SQLAlchemy ORM
 - JWT Authentication
 - Pydantic validation
+- Cloudinary (Media Hosting)
 
 **Frontend:**
 
@@ -39,13 +40,14 @@ A modern, professional web-based Academic English Institute Management System wi
 
 - Python 3.10+
 - Node.js 18+
-- PostgreSQL 15+
+- MySQL (via XAMPP or native)
+- Cloudinary Account (for media)
 
 ## 🔧 Installation
 
 ### 1. Database Setup
 
-Create a PostgreSQL database:
+Start XAMPP, open phpMyAdmin, and create a new empty database:
 
 ```sql
 CREATE DATABASE academic_system;
@@ -63,8 +65,9 @@ cd backend
 # Install dependencies (already done)
 # pip install -r requirements.txt
 
-# Update .env file with your database credentials
-# DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/academic_system
+# Update .env file with your database credentials and Cloudinary URL
+# DATABASE_URL=mysql+pymysql://root:@localhost:3306/academic_system
+# CLOUDINARY_URL=cloudinary://...
 
 # Initialize database and create tables
 python init_db.py
@@ -167,8 +170,9 @@ Academic System/
 
 **Backend won't start:**
 
-- Check PostgreSQL is running
+- Check MySQL (XAMPP) is running
 - Verify database credentials in `.env`
+- Verify Cloudinary URL in `.env`
 - Ensure virtual environment is activated
 
 **Frontend won't start:**

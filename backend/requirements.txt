@@ -14,3 +14,4 @@ python-dateutil==2.8.2
 slowapi==0.1.9
 filetype==1.2.0
 pymysql==1.1.0
+cloudinary==1.39.0

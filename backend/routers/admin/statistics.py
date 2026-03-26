@@ -129,9 +129,9 @@ async def get_revenue_chart_data(period: str = "6m", db: Session = Depends(get_d
 
     # For 30-day view use daily granularity; all others use monthly
     if period == "30d":
-        date_label = func.strftime('%Y-%m-%d', effective_date).label("date_label")
+        date_label = func.DATE_FORMAT(effective_date, '%Y-%m-%d').label("date_label")
     else:
-        date_label = func.strftime('%Y-%m', effective_date).label("date_label")
+        date_label = func.DATE_FORMAT(effective_date, '%Y-%m').label("date_label")
 
     query = db.query(
         date_label,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { getMediaUrl } from '../../utils/mediaUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -327,7 +328,7 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
         {question.question_image_path ? (
           <div className="flex items-center gap-2 mb-1">
             <img
-              src={`http://localhost:8000${question.question_image_path}`}
+              src={getMediaUrl(question.question_image_path)}
               alt="question"
               className="h-24 rounded-lg border border-gray-200 dark:border-gray-600 object-cover"
             />
@@ -356,7 +357,7 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
           </p>
           {question.audio_file_path ? (
             <div className="flex items-center gap-2">
-              <audio controls className="flex-1 h-8" src={`http://localhost:8000${question.audio_file_path}`} />
+              <audio controls className="flex-1 h-8" src={getMediaUrl(question.audio_file_path)} />
               <button
                 onClick={() => onChange({ ...question, audio_file_path: null })}
                 className="p-1 text-red-500 hover:text-red-700"
@@ -454,7 +455,7 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
                     {opt.option_image_path ? (
                       <div className="flex items-center gap-2">
                         <img
-                          src={`http://localhost:8000${opt.option_image_path}`}
+                          src={getMediaUrl(opt.option_image_path)}
                           alt="option"
                           className="h-12 w-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
                         />

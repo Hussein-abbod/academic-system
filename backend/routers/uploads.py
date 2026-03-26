@@ -6,14 +6,13 @@ File type is validated via magic bytes (not just the Content-Type header).
 import os
 import uuid
 import filetype
+import cloudinary
+import cloudinary.uploader
+from config import settings
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from auth.dependencies import require_teacher
 
-UPLOAD_BASE = os.path.join(os.path.dirname(__file__), "..", "uploads")
-AUDIO_DIR = os.path.join(UPLOAD_BASE, "audio")
-IMAGE_DIR = os.path.join(UPLOAD_BASE, "images")
-
-ALLOWED_AUDIO = {"audio/mpeg", "audio/x-wav", "audio/ogg", "audio/flac"}
+ALLOWED_AUDIO = {"audio/mpeg", "audio/x-wav", "audio/ogg", "audio/flac", "audio/mp4", "video/mp4", "application/mp4"}
 ALLOWED_IMAGE = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 MAX_AUDIO_MB = 20
 MAX_IMAGE_MB = 5
@@ -38,15 +37,19 @@ async def upload_audio(
         detected = kind.mime if kind else "unknown"
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type detected: {detected}. Allowed: mp3, wav, ogg, flac",
+            detail=f"Invalid file type detected: {detected}. Allowed: mp3, m4a, wav, ogg, flac",
         )
 
-    os.makedirs(AUDIO_DIR, exist_ok=True)
-    filename = f"{uuid.uuid4()}.{kind.extension}"
-    with open(os.path.join(AUDIO_DIR, filename), "wb") as f:
-        f.write(content)
-
-    return {"url": f"/uploads/audio/{filename}", "filename": filename}
+    # Upload to Cloudinary (audio is handled as resource_type='video' in Cloudinary)
+    try:
+        result = cloudinary.uploader.upload(
+            content,
+            resource_type="video",
+            folder="academic_system/audio"
+        )
+        return {"url": result["secure_url"], "filename": result["public_id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload to Cloudinary: {str(e)}")
 
 
 @router.post("/image")
@@ -69,9 +72,13 @@ async def upload_image(
             detail=f"Invalid file type detected: {detected}. Allowed: jpg, png, gif, webp",
         )
 
-    os.makedirs(IMAGE_DIR, exist_ok=True)
-    filename = f"{uuid.uuid4()}.{kind.extension}"
-    with open(os.path.join(IMAGE_DIR, filename), "wb") as f:
-        f.write(content)
-
-    return {"url": f"/uploads/images/{filename}", "filename": filename}
+    # Upload to Cloudinary
+    try:
+        result = cloudinary.uploader.upload(
+            content,
+            resource_type="image",
+            folder="academic_system/images"
+        )
+        return {"url": result["secure_url"], "filename": result["public_id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload to Cloudinary: {str(e)}")

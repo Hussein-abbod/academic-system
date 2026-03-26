@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
 
+    # Cloudinary Cloud Storage
+    CLOUDINARY_URL: str = ""
+
     # Application
     APP_NAME: str = "Cosmic Academy Management System"
     VERSION: str = "1.0.0"
@@ -26,5 +29,8 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = True
 
-
 settings = Settings()
+
+import os
+if settings.CLOUDINARY_URL:
+    os.environ["CLOUDINARY_URL"] = settings.CLOUDINARY_URL

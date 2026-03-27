@@ -162,19 +162,8 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-cosmic-dark rounded-lg">
-            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-2">
-              Demo Credentials:
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              Email: admin@cosmic.academy<br />
-              Password: admin123
-            </p>
-          </div>
         </motion.div>
-
+        
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
           © 2026 Cosmic Academy. All rights reserved.

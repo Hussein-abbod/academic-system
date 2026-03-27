@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard,
   BookOpen,
@@ -10,10 +11,12 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  LogOut,
   X
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
+  const { logout } = useAuth();
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
     { icon: BookOpen, label: 'Courses', path: '/admin/courses' },
@@ -31,13 +34,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       `}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3 overflow-hidden">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 bg-cosmic-red rounded-lg flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-lg">CA</span>
           </div>
           {isOpen && (
-            <div>
+            <div className="min-w-0">
               <h1 className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">Cosmic</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">Academy</p>
             </div>
@@ -60,7 +63,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="mt-6 px-3">
+      <nav className="flex-1 mt-6 px-3 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
@@ -80,6 +83,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </NavLink>
         ))}
       </nav>
+
+      {/* Sign Out */}
+      <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={logout}
+          className={`flex items-center w-full px-3 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors ${!isOpen && 'justify-center'}`}
+        >
+          <LogOut className={`w-5 h-5 flex-shrink-0 ${isOpen ? 'mr-3' : ''}`} />
+          {isOpen && <span className="font-medium whitespace-nowrap">Sign Out</span>}
+        </button>
+      </div>
     </aside>
   );
 };

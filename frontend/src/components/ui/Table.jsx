@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Table = ({ data = [], columns, searchable = false, searchKeys = [] }) => {
+const Table = ({ data = [], columns, searchable = false, searchKeys = [], isLoading = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Ensure data is always an array to prevent crashes
@@ -50,7 +50,18 @@ const Table = ({ data = [], columns, searchable = false, searchKeys = [] }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-             {filteredData.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-12 text-center">
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 dark:border-gray-700"></div>
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredData.length > 0 ? (
               filteredData.map((row, rowIndex) => (
                 <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   {columns.map((col, colIndex) => (
@@ -61,17 +72,17 @@ const Table = ({ data = [], columns, searchable = false, searchKeys = [] }) => {
                 </tr>
               ))
             ) : (
-                <tr>
-                    <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                        No results found
-                    </td>
-                </tr>
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  No results found
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
       <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-        <span>Showing {filteredData.length} entries</span>
+        <span>{isLoading ? 'Loading...' : `Showing ${filteredData.length} entries`}</span>
       </div>
     </div>
   );

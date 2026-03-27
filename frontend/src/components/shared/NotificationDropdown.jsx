@@ -103,7 +103,11 @@ const NotificationDropdown = () => {
 
             {/* Dropdown Panel */}
             {open && (
-                <div className="absolute right-0 mt-2 w-80 z-50 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                <div className="
+                  fixed inset-x-2 top-14 z-50
+                  sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80
+                  bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden
+                ">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700">
                         <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">

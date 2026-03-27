@@ -260,6 +260,7 @@ const Students = () => {
         columns={columns}
         searchable
         searchKeys={['full_name', 'email']}
+        isLoading={isLoading}
       />
 
       {/* Create Modal */}

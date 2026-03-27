@@ -33,7 +33,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'}
       `}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Logo Section */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 overflow-hidden">
@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </div>
             {isOpen && (
               <span className="text-xl font-bold bg-gradient-to-r from-cosmic-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
-                Cosmic Academy
+                Cosmic Teacher
               </span>
             )}
           </div>

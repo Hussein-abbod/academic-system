@@ -73,7 +73,16 @@ const MyCourses = () => {
     },
   });
 
-  if (isLoading) return <div>Loading courses...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-gray-700"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

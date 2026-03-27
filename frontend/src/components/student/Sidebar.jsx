@@ -33,10 +33,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'}
       `}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Logo Section */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 overflow-hidden">
+          <div className="flex items-center gap-2 min-w-0">
             <div className="bg-gradient-to-tr from-green-500 to-emerald-600 text-white p-2 rounded-lg shrink-0">
               <GraduationCap size={24} />
             </div>

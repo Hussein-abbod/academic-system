@@ -47,18 +47,18 @@ export default function QuizResults() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
           { label: 'Total Submissions', value: results.length, icon: User, color: 'text-blue-500' },
           { label: 'Average Score', value: results.length ? `${avg.toFixed(1)}%` : 'N/A', icon: Award, color: 'text-purple-500' },
           { label: 'Total Points', value: quiz?.total_points || 0, icon: CheckCircle, color: 'text-emerald-500' },
         ].map(s => (
           <div key={s.label} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3">
-            <div className={`${s.color} bg-gray-100 dark:bg-gray-700 p-2.5 rounded-xl`}>
+            <div className={`${s.color} bg-gray-100 dark:bg-gray-700 p-2.5 rounded-xl flex-shrink-0`}>
               <s.icon size={20} />
             </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{s.label}</p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">{s.value}</p>
             </div>
           </div>
@@ -77,7 +77,8 @@ export default function QuizResults() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead className="bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
               <tr>
                 <th className="px-5 py-3 text-left">Student</th>
@@ -128,6 +129,7 @@ export default function QuizResults() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

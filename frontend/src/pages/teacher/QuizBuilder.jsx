@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
   ArrowLeft, Save, Send, Plus, Trash2, GripVertical,
-  Mic, List, CheckCircle, Volume2, Image, X, Loader2
+  PenLine, List, CheckCircle, Volume2, Image, X, Loader2
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -252,7 +252,7 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
     : question.question_type === 'SHORT_ANSWER' ? 'Spelling / Short Answer'
     : 'Multiple Choice';
   const TypeIcon = question.question_type === 'LISTENING' ? Volume2
-    : question.question_type === 'SHORT_ANSWER' ? Mic
+    : question.question_type === 'SHORT_ANSWER' ? PenLine
     : List;
 
   // Question image upload handler
@@ -779,7 +779,7 @@ export default function QuizBuilder() {
               onClick={() => setQuestions(qs => [...qs, { ...newShortAnswer(), order_index: qs.length }])}
               className="flex-1 min-w-[150px] flex items-center justify-center gap-2 py-3 border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all font-medium text-sm"
             >
-              <Mic size={16} />
+              <PenLine size={16} />
               Add Spelling Question
             </button>
           </div>

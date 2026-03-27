@@ -16,11 +16,22 @@ else:
         db_url = re.sub(r'[?&]sslmode=[^&]+', '', db_url)
         connect_args["ssl"] = {}
 
+engine_kwargs = {
+    "pool_pre_ping": True if not db_url.startswith("sqlite") else False,
+    "echo": False,
+}
+
+# Add connection pooling parameters for production databases (MySQL/PostgreSQL)
+if not db_url.startswith("sqlite"):
+    engine_kwargs["pool_size"] = 20
+    engine_kwargs["max_overflow"] = 30
+    engine_kwargs["pool_timeout"] = 30 # wait up to 30 seconds for a connection
+    engine_kwargs["pool_recycle"] = 1800 # recycle connections every 30 minutes to prevent staleness
+
 engine = create_engine(
     db_url,
     connect_args=connect_args,
-    pool_pre_ping=True if not db_url.startswith("sqlite") else False,
-    echo=False
+    **engine_kwargs
 )
 
 # Create SessionLocal class for database sessions

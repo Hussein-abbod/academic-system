@@ -126,8 +126,12 @@ const MyPayments = () => {
 
     if (isLoadingPayments || isLoadingEnrollments) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+                <div className="relative">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 dark:border-gray-700"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+                </div>
+                <p className="text-sm text-gray-400 dark:text-gray-500">Loading payments...</p>
             </div>
         );
     }

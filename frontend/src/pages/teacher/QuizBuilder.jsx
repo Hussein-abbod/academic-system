@@ -532,11 +532,24 @@ export default function QuizBuilder() {
   });
 
   // Load existing quiz when editing
-  const { data: existingQuiz } = useQuery({
+  const { data: existingQuiz, isLoading: isLoadingQuiz } = useQuery({
     queryKey: ['quiz-edit', quizId],
     enabled: isEdit,
     queryFn: async () => (await api.get(`/teacher/quizzes/${quizId}`)).data
   });
+
+  // Show spinner while loading quiz data in edit mode
+  if (isEdit && isLoadingQuiz) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-gray-200 dark:border-gray-700"></div>
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+        </div>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Loading quiz...</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (existingQuiz) {

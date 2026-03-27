@@ -63,7 +63,7 @@ function ResultScreen({ result, onBack }) {
         <h2 className={`text-2xl font-bold mb-1 ${grade.color}`}>{grade.label}</h2>
         <p className="text-gray-500 dark:text-gray-400 mb-6">{result.quiz_title}</p>
 
-        <div className="flex justify-center gap-6 mb-8">
+        <div className="flex justify-center gap-4 sm:gap-6 mb-8">
           <div className="text-center">
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{result.score}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Points scored</p>
@@ -200,12 +200,12 @@ export default function QuizTake() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-3 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
         <div>
-          <h1 className="font-bold text-gray-900 dark:text-white text-sm">{quiz?.title}</h1>
+          <h1 className="font-bold text-gray-900 dark:text-white text-sm truncate">{quiz?.title}</h1>
           <p className="text-xs text-gray-400">{answered} / {questions.length} answered</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
           {timerDisplay && (
             <div className={`flex items-center gap-1.5 font-mono font-bold text-lg ${timerColor}`}>
               <Clock size={18} />
@@ -246,7 +246,7 @@ export default function QuizTake() {
               className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-2xl w-full shadow-sm"
             >
               {/* Question header */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
                 <span className="text-xs font-semibold text-gray-400 bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">
                   Q{currentQ + 1} of {questions.length}
                 </span>

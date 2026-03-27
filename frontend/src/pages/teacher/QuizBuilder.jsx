@@ -283,15 +283,15 @@ function QuestionCard({ question, index, onChange, onDelete, dragHandleProps }) 
         <div {...dragHandleProps} className="mt-1 cursor-grab text-gray-400 hover:text-gray-600">
           <GripVertical size={18} />
         </div>
-        <div className={`w-8 h-8 bg-gradient-to-br ${typeColor} rounded-lg flex items-center justify-center shrink-0`}>
+        <div className={`w-8 h-8 shrink-0 bg-gradient-to-br ${typeColor} rounded-lg flex items-center justify-center`}>
           <TypeIcon size={14} className="text-white" />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-semibold bg-gradient-to-r ${typeColor} bg-clip-text text-transparent`}>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className={`text-xs font-semibold bg-gradient-to-r ${typeColor} bg-clip-text text-transparent truncate`}>
               Q{index + 1} · {typeLabel}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start sm:self-auto">
               <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <span>pts:</span>
                 <input
@@ -686,7 +686,7 @@ export default function QuizBuilder() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/teacher/quizzes')}
@@ -703,7 +703,7 @@ export default function QuizBuilder() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0">
           <button
             onClick={saveQuiz}
             disabled={saving}

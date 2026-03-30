@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
   Clock, ChevronLeft, ChevronRight, Send, CheckCircle,
-  XCircle, Award, RotateCcw, Volume2, Maximize2, X
+  XCircle, Award, RotateCcw, Volume2, Maximize2, X, Play
 } from 'lucide-react';
 import api from '../../utils/api';
 import { getMediaUrl } from '../../utils/mediaUtils';

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
   ArrowLeft, Save, Send, Plus, Trash2, GripVertical,
-  PenLine, List, CheckCircle, Volume2, Image, X, Loader2
+  PenLine, List, CheckCircle, Volume2, Image, X, Loader2, Mic
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -538,19 +538,6 @@ export default function QuizBuilder() {
     queryFn: async () => (await api.get(`/teacher/quizzes/${quizId}`)).data
   });
 
-  // Show spinner while loading quiz data in edit mode
-  if (isEdit && isLoadingQuiz) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen gap-3">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-14 w-14 border-4 border-gray-200 dark:border-gray-700"></div>
-          <div className="animate-spin rounded-full h-14 w-14 border-4 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
-        </div>
-        <p className="text-sm text-gray-400 dark:text-gray-500">Loading quiz...</p>
-      </div>
-    );
-  }
-
   useEffect(() => {
     if (existingQuiz) {
       setInfo({
@@ -577,6 +564,20 @@ export default function QuizBuilder() {
       }));
     }
   }, [existingQuiz]);
+
+  // Show spinner while loading quiz data in edit mode
+  // Moved below hooks to satisfy Rules of Hooks
+  if (isEdit && isLoadingQuiz) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-gray-200 dark:border-gray-700"></div>
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+        </div>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Loading quiz...</p>
+      </div>
+    );
+  }
 
   const totalPoints = questions.reduce((s, q) => s + (q.points || 0), 0);
 

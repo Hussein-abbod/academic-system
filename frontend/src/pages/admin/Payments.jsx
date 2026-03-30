@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Users, ArrowDownUp } from 'lucide-react';
+import { AlertCircle, Users, ArrowDownUp, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../utils/api';
 import Table from '../../components/ui/Table';
@@ -231,7 +231,35 @@ const Payments = () => {
     }
   ];
 
-  if (isLoading) return <div className="p-8 text-center">Loading payments...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-5 animate-in fade-in duration-500">
+        <div className="relative flex items-center justify-center">
+          {/* Main spinning outer ring */}
+          <div className="w-20 h-20 border-4 border-blue-50 dark:border-slate-800 border-t-blue-600 dark:border-t-blue-500 rounded-full animate-spin"></div>
+          
+          {/* Subtler inner ring spinning opposite */}
+          <div className="absolute w-14 h-14 border-4 border-transparent border-b-blue-400 dark:border-b-blue-600 rounded-full animate-spin [animation-duration:1.5s] [animation-direction:reverse]"></div>
+          
+          {/* Money-related icon in the dead center */}
+          <div className="absolute">
+            <Coins className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-sm font-bold text-gray-600 dark:text-gray-300 tracking-wide uppercase">
+            Loading payments...
+          </p>
+          <div className="flex gap-1.5">
+            <span className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+            <span className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+            <span className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const selectedStudentSummary = studentSummaries.find(s => s.student_id === selectedStudentId);
 

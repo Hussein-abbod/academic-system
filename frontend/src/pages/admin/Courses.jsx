@@ -282,6 +282,22 @@ const Courses = () => {
     }
   ];
 
+  if (coursesLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 animate-in fade-in duration-500">
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-blue-100 dark:border-blue-900/20 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+          <div className="absolute">
+            <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+        </div>
+        <p className="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase animate-pulse">
+          Loading courses...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}

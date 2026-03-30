@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
+import { useTheme } from './ThemeContext';
 
 const AuthContext = createContext(null);
 
@@ -14,13 +15,27 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { resetTheme } = useTheme();
 
   useEffect(() => {
+    // Check if we have an active session flag in sessionStorage.
+    // Unlike cookies, sessionStorage is cleared by the browser when the tab/window is closed.
+    const sessionActive = sessionStorage.getItem('academic_system_session');
+
+    if (!sessionActive) {
+      // If no session flag exists, skip session restoration (even if cookie is present)
+      setLoading(false);
+      return;
+    }
+
     // Restore session by calling /auth/me — the HttpOnly cookie is sent automatically.
-    // No localStorage needed; the browser manages the cookie.
     api.get('/auth/me')
       .then((res) => setUser(res.data))
-      .catch(() => setUser(null))
+      .catch(() => {
+          // If the token is invalid or expired, clear the flag too
+          sessionStorage.removeItem('academic_system_session');
+          setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -28,7 +43,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/login', { email, password, role });
       // The server sets the HttpOnly cookie automatically via set-cookie header.
-      // We only store the user object in React state — never in localStorage.
+      // Mark session as active in sessionStorage so it persists on refresh
+      sessionStorage.setItem('academic_system_session', 'active');
       setUser(response.data.user);
       return { success: true };
     } catch (error) {
@@ -41,10 +57,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Ask the server to clear the HttpOnly cookie — JS cannot do this itself.
+      // Clear the session flag and ask the server to clear the HttpOnly cookie
+      sessionStorage.removeItem('academic_system_session');
+      resetTheme();
       await api.post('/auth/logout');
     } catch (_) {
-      // Proceed even if the request fails (token may already be expired)
+      // Proceed even if the request fails
     }
     setUser(null);
     window.location.href = '/login';

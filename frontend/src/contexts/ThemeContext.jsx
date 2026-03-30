@@ -27,9 +27,16 @@ export const ThemeProvider = ({ children }) => {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
+  const resetTheme = () => {
+    setTheme('light');
+    localStorage.removeItem('theme');
+    document.documentElement.classList.remove('dark');
+  };
+
   const value = {
     theme,
     toggleTheme,
+    resetTheme,
     isDark: theme === 'dark',
   };
 

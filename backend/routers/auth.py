@@ -17,7 +17,6 @@ _COOKIE_ARGS = dict(
     samesite="none",        # Required for Cross-Origin (Frontend on Vercel, Backend on Render)
     secure=True,            # Always True for SameSite=None (Requires HTTPS)
     path="/",
-    max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
 )
 
 

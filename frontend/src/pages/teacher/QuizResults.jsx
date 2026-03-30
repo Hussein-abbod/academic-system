@@ -67,8 +67,16 @@ export default function QuizResults() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 animate-in fade-in duration-500">
+          <div className="relative flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-purple-100 dark:border-purple-900/20 border-t-purple-600 dark:border-t-purple-400 rounded-full animate-spin"></div>
+            <div className="absolute">
+              <BarChart2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+          </div>
+          <p className="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase animate-pulse">
+            Loading Results...
+          </p>
         </div>
       ) : results.length === 0 ? (
         <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">

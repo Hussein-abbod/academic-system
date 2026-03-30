@@ -24,11 +24,16 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-gray-700"></div>
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 animate-in fade-in duration-500">
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-indigo-100 dark:border-indigo-900/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin"></div>
+          <div className="absolute">
+            <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+          </div>
         </div>
+        <p className="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase animate-pulse">
+          Loading Dashboard...
+        </p>
       </div>
     );
   }

@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Cosmic Academy brand colors
-        cosmic: {
+        // SpeakUP Academy brand colors
+        speakup: {
           red: '#E53E3E',
           dark: '#1A1A1A',
           darker: '#0D0D0D',

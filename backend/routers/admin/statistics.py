@@ -115,20 +115,30 @@ async def get_revenue_chart_data(period: str = "6m", db: Session = Depends(get_d
     
     # Calculate start date based on period
     now = datetime.utcnow()
-    if period == "1y":
-        start_date = now - timedelta(days=365)
-    elif period == "30d":
-        start_date = now - timedelta(days=30)
+    if period == "month":
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif period == "1y":
+        start_month = now.month - 11
+        start_year = now.year
+        while start_month <= 0:
+            start_month += 12
+            start_year -= 1
+        start_date = now.replace(year=start_year, month=start_month, day=1, hour=0, minute=0, second=0, microsecond=0)
     elif period == "all":
         start_date = None  # No date filter for all time
     else:  # Default to 6m
-        start_date = now - timedelta(days=180)
+        start_month = now.month - 5
+        start_year = now.year
+        while start_month <= 0:
+            start_month += 12
+            start_year -= 1
+        start_date = now.replace(year=start_year, month=start_month, day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # Use COALESCE so payments where payment_date is NULL fall back to created_at
     effective_date = func.coalesce(Payment.payment_date, Payment.created_at)
 
-    # For 30-day view use daily granularity; all others use monthly
-    if period == "30d":
+    # For month view use daily granularity; all others use monthly
+    if period == "month":
         date_label = func.DATE_FORMAT(effective_date, '%Y-%m-%d').label("date_label")
     else:
         date_label = func.DATE_FORMAT(effective_date, '%Y-%m').label("date_label")
@@ -144,9 +154,34 @@ async def get_revenue_chart_data(period: str = "6m", db: Session = Depends(get_d
         query = query.filter(effective_date >= start_date)
 
     revenue_data = query.group_by(date_label).order_by(date_label).all()
+    data_dict = {date_str: float(total or 0) for date_str, total in revenue_data}
 
-    # Format for frontend
-    return [
-        {"date": date_str, "amount": float(total or 0)}
-        for date_str, total in revenue_data
-    ]
+    result = []
+    if period == "month":
+        result = [{"date": d_str, "amount": float(total)} for d_str, total in revenue_data]
+        if not result:  # If no payments yet, show today with 0
+            result.append({"date": now.strftime('%Y-%m-%d'), "amount": 0.0})
+    else:
+        if period == "1y":
+            months_back = 11
+        elif period == "6m":
+            months_back = 5
+        else: # "all"
+            if data_dict:
+                earliest_str = min(data_dict.keys())
+                earliest_year, earliest_month = map(int, earliest_str.split('-'))
+                months_back = (now.year - earliest_year) * 12 + now.month - earliest_month
+                months_back = max(months_back, 0)
+            else:
+                months_back = 5
+
+        for i in range(months_back, -1, -1):
+            month = now.month - i
+            year = now.year
+            while month <= 0:
+                month += 12
+                year -= 1
+            d_str = f"{year}-{month:02d}"
+            result.append({"date": d_str, "amount": data_dict.get(d_str, 0.0)})
+
+    return result

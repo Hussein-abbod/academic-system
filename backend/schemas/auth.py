@@ -7,7 +7,7 @@ class LoginRequest(BaseModel):
     """Login request schema"""
     email: EmailStr
     password: str
-    role: UserRole
+    role: Optional[UserRole] = None
 
 
 class UserResponse(BaseModel):

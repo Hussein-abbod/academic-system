@@ -39,9 +39,9 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email, password, role) => {
+  const login = async (email, password) => {
     try {
-      const response = await api.post('/auth/login', { email, password, role });
+      const response = await api.post('/auth/login', { email, password });
       // The server sets the HttpOnly cookie automatically via set-cookie header.
       // Mark session as active in sessionStorage so it persists on refresh
       sessionStorage.setItem('academic_system_session', 'active');

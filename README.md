@@ -1,192 +1,154 @@
-# Cosmic Academy Management System
+# SpeakUP Academy Management System
 
-A modern, professional web-based Academic English Institute Management System with role-based authentication and comprehensive admin dashboard.
+![Project Status](https://img.shields.io/badge/Status-Active-success)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![Python](https://img.shields.io/badge/Python-3.10+-yellow)
+![React](https://img.shields.io/badge/React-18-cyan)
 
-## 🚀 Features
+A robust, enterprise-grade **Academic English Institute Management System** engineered for scalability and performance. Built with a modern full-stack ecosystem to digitize and manage complete institute operations, including role-based authentication, course scheduling, enrollment tracking, and interactive real-time dashboard analytics.
 
-### Admin Dashboard
+## 🌟 Project Overview
 
-- ✅ **Authentication** - JWT-based login with role selection
-- ✅ **Dashboard** - Real-time statistics (students, teachers, revenue, courses)
-- ✅ **Course Management** - Create, edit, delete courses and assign teachers
-- ✅ **User Management** - Create and manage teacher/student accounts
-- ✅ **Enrollment Management** - Enroll students in courses and track progress
-- ✅ **Payment Tracking** - Monitor payment status (paid, pending, partial)
-- ✅ **Level Management** - Manage course levels (Beginner, Intermediate, Advanced)
-- ✅ **Dark/Light Mode** - Toggle between themes
-- ✅ **Responsive Design** - Works on all devices
+This architecture was specifically developed to bridge the gap between traditional academic institute administration and modern digital transformation. It centralizes student operations, teacher management, and administrative oversight into a cohesive, secure interface. The system ensures robust data integrity, enforces strict access control through JWT authentication, and delivers actionable insights to stakeholders.
 
-## 🛠️ Tech Stack
+---
 
-**Backend:**
+## 🚀 Key Technical Features
 
-- FastAPI (Python)
-- MySQL / XAMPP
-- SQLAlchemy ORM
-- JWT Authentication
-- Pydantic validation
-- Cloudinary (Media Hosting)
+### 🛡️ Robust Administrative & Security Controls
+- **Role-Based Access Control (RBAC)**: Comprehensive security using JWT tokens allowing strict context separation for Admins, Teachers, and Students.
+- **Analytics Dashboard**: Aggregated real-time metrics for active user retention, financial charting, teacher utilization, and live active courses.
+- **Course & Level Lifecycle**: Zero-friction CRUD infrastructure for multi-tiered proficiency courses (Beginner, Intermediate, Advanced).
 
-**Frontend:**
+### 👥 User & Enrollment Optimization
+- **Entity Lifecycle Management**: Intuitive dashboard screens to onboard and oversee teacher capacities and student profiles.
+- **Streamlined Workflow**: Secure course assignments mapping students functionally to tracking arrays.
+- **Financial Status Management**: Modular transaction models mapping tuition logs (Paid, Pending, Partial).
 
-- React 18
-- Vite
-- Tailwind CSS
-- Framer Motion (animations)
-- React Query (data fetching)
-- Axios (API client)
+### 🎨 Progressive UI/UX System
+- **Responsive Architecture**: Mobile-first fluid interface leveraging complete Tailwind CSS grid/flex optimizations.
+- **Dynamic Theming Integration**: Centralized UI state enabling live dark/light mode toggling based on native preferences.
+- **Micro-Interactions**: Enriched with `framer-motion` to provide a snappy, application-like experience feeling organic and premium.
 
-## 📋 Prerequisites
+---
 
-- Python 3.10+
-- Node.js 18+
-- MySQL (via XAMPP or native)
-- Cloudinary Account (for media)
+## 🛠⚙️ Technical Architecture & Stack
 
-## 🔧 Installation
+### Backend Services (API)
+- **Framework:** FastAPI (Python) - *Adopted for unparalleled async performance and rapid REST API delivery.*
+- **Database Architecture:** Relational DB (MySQL) orchestrated via **SQLAlchemy ORM**.
+- **Data Validation & Parsing:** Pydantic - *Strict static type checking to prevent injection and format errors.*
+- **Cloud Infrastructure:** Integrated with **Cloudinary** for high-availability media/asset delivery.
 
-### 1. Database Setup
+### Frontend Client
+- **Core Library:** React 18 coupled with Vite.js - *Resulting in micro-second Fast Refresh compilation and highly optimized build assets.*
+- **Global State / Remote Caching:** React Query & Axios - *Asynchronous state management reducing redundant API hits.*
+- **Styling Pipeline:** Tailwind CSS.
 
-Start XAMPP, open phpMyAdmin, and create a new empty database:
+---
 
+## 📋 System Requirements
+
+Ensure you have the following installed on your local development machine:
+
+- **Python** `3.10` or higher
+- **Node.js** `18.0` or higher
+- **Database Service**: MySQL (via XAMPP)
+- **Cloudinary Account** (Optional, for media asset testing)
+
+---
+
+## 🔧 Installation & Local Setup 
+
+Follow these steps to bootstrap the system locally.
+
+### 1. Database Configuration
+Open your SQL client or CLI and generate the target database:
 ```sql
 CREATE DATABASE academic_system;
 ```
 
-### 2. Backend Setup
-
+### 2. Backend Initialization
 ```bash
-# Navigate to backend directory
+# Navigate to the backend directory
 cd backend
 
-# Activate virtual environment
-.\venv\Scripts\activate
+# Create and activate a pristine Python virtual environment
+python -m venv venv
+# Windows: .\venv\Scripts\activate
+# Mac/Linux: source venv/bin/activate
 
-# Install dependencies (already done)
-# pip install -r requirements.txt
+# Install strictly verified dependencies
+pip install -r requirements.txt
 
-# Update .env file with your database credentials and Cloudinary URL
+# (Optional) Update your .env file with appropriate URIs:
 # DATABASE_URL=mysql+pymysql://root:@localhost:3306/academic_system
-# CLOUDINARY_URL=cloudinary://...
 
-# Initialize database and create tables
+# Seed configuration schemas and generate all relational tables
 python init_db.py
 ```
 
-### 3. Frontend Setup
-
+### 3. Frontend Initialization
 ```bash
-# Navigate to frontend directory
+# Open a new terminal instance and navigate to frontend
 cd frontend
 
-# Install dependencies (already done)
-# npm install
-```
+# Install package lock tree
+npm install
 
-## 🚀 Running the Application
-
-### Start Backend Server
-
-```bash
-cd backend
-.\venv\Scripts\activate
-uvicorn main:app --reload --port 8000
-```
-
-The API will be available at: `http://localhost:8000`
-API documentation: `http://localhost:8000/docs`
-
-### Start Frontend Development Server
-
-```bash
-cd frontend
+# Initialize the Vite development server
 npm run dev
 ```
 
-The application will be available at: `http://localhost:5173`
-
-## 🔐 Default Login Credentials
-
-**Admin Account:**
-
-- Email: `admin@cosmic.academy`
-- Password: `admin123`
-- Role: Admin
-
-## 📁 Project Structure
-
-```
-Academic System/
-├── backend/
-│   ├── models/          # Database models
-│   ├── routers/         # API endpoints
-│   │   └── admin/       # Admin-specific routes
-│   ├── schemas/         # Pydantic schemas
-│   ├── auth/            # Authentication logic
-│   ├── venv/            # Virtual environment
-│   ├── config.py        # Configuration
-│   ├── database.py      # Database setup
-│   ├── main.py          # FastAPI app
-│   └── init_db.py       # Database initialization
-│
-└── frontend/
-    ├── src/
-    │   ├── components/  # React components
-    │   │   ├── admin/   # Admin components
-    │   │   ├── auth/    # Auth components
-    │   │   └── ui/      # UI components
-    │   ├── contexts/    # React contexts
-    │   ├── layouts/     # Page layouts
-    │   ├── pages/       # Page components
-    │   │   └── admin/   # Admin pages
-    │   ├── utils/       # Utilities
-    │   └── App.jsx      # Main app component
-    └── package.json
-```
-
-## 🎨 Design Features
-
-- **Modern SaaS UI** - Clean, professional interface inspired by Notion
-- **Cosmic Academy Branding** - Red (#E53E3E) and dark theme colors
-- **Smooth Animations** - Framer Motion for delightful interactions
-- **Dark Mode** - Full dark mode support with theme toggle
-- **Responsive** - Mobile-first design
-
-## 🔜 Future Phases
-
-- **Phase 2:** Teacher Dashboard (Quiz creation, attendance, analytics)
-- **Phase 3:** Student Dashboard (Take quizzes, view progress)
-- **Phase 4:** AI speaking feature integration
-
-## 📝 Notes
-
-- Backend uses Python virtual environment (`venv/`)
-- Frontend uses Vite for fast development
-- All API endpoints are prefixed with `/api` in frontend
-- JWT tokens stored in localStorage
-- Database migrations handled by SQLAlchemy
-
-## 🐛 Troubleshooting
-
-**Backend won't start:**
-
-- Check MySQL (XAMPP) is running
-- Verify database credentials in `.env`
-- Verify Cloudinary URL in `.env`
-- Ensure virtual environment is activated
-
-**Frontend won't start:**
-
-- Check Node.js version (18+)
-- Run `npm install` again
-- Clear npm cache: `npm cache clean --force`
-
-**Cannot login:**
-
-- Ensure backend server is running
-- Check browser console for errors
-- Verify database was initialized: `python init_db.py`
+### 4. Running the Application
+Once properly initialized, your microservice stack is available at:
+- **FastAPI Backend Service:** `http://localhost:8000` 
+  - *Interactive API Documentation available at:* `http://localhost:8000/docs`
+- **React Frontend Application:** `http://localhost:5173`
 
 ---
 
-Built with ❤️ for Cosmic Academy
+## 🔐 System Default Testing Credentials
+
+Use the following credentials to access the primary administrative layer:
+
+- **System Administrator Email:** `admin@speakup.academy`
+- **Password:** `admin123`
+- **Authorization Context:** Admin
+
+---
+
+## 📁 Macro Structure
+
+A brief overview of the folder hierarchy.
+
+```text
+SpeakUP Academy System/
+├── backend/
+│   ├── models/          # Relational Database Mappings (SQLAlchemy)
+│   ├── routers/         # Highly Modular Request Controllers 
+│   ├── schemas/         # Pydantic Typing/Validation Objects
+│   ├── auth/            # JWT Token Services and Encoders
+│   └── main.py          # FastAPI ASGI Entry Node
+├── frontend/
+│   ├── src/
+│   │   ├── components/  # Atomic and Composite React Components
+│   │   ├── contexts/    # React Contexts (Auth, Theme)
+│   │   ├── layouts/     # Primary System Scaffolds
+│   │   ├── pages/       # Route-specific View Injection
+│   │   └── utils/       # Modular Helpers and API Adapters
+│   └── tailwind.config.js
+└── README.md
+```
+
+---
+
+## 🔜 Strategic Road Map
+
+- [ ] **Phase 2:** Teacher Dashboard Deployment (Quiz orchestration, dynamic grading metrics).
+- [ ] **Phase 3:** Student Experience Evolution (Interactive exam interfaces, visual progression timeline).
+- [ ] **Phase 4:** Generative AI NLP Integration (Automated speaking fluency evaluations).
+
+---
+
+> Built and conceptualized as a holistic representation of modern software engineering principles and full-stack integration expertise.

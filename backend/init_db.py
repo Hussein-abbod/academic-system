@@ -17,14 +17,14 @@ def init_database():
         if not admin_exists:
             # Create default admin user
             admin = User(
-                email="admin@cosmic.academy",
+                email="admin@speakup.academy",
                 hashed_password=hash_password("admin123"),
                 role=UserRole.ADMIN,
                 full_name="Admin User",
                 is_active=True
             )
             db.add(admin)
-            print("✓ Created default admin user (email: admin@cosmic.academy, password: admin123)")
+            print("✓ Created default admin user (email: admin@speakup.academy, password: admin123)")
         
         db.commit()
         print("\n✓ Database initialized successfully!")

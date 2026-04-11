@@ -36,12 +36,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 bg-cosmic-red rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-lg">CA</span>
+          <div className="w-10 h-10 bg-[var(--logo-bg)] rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+            <img src="/logo.png" alt="SpeakUP Logo" className="w-full h-full object-contain p-1" />
           </div>
           {isOpen && (
             <div className="min-w-0">
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">Cosmic</h1>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">SpeakUP</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">Academy</p>
             </div>
           )}
@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-3 mb-2 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'bg-cosmic-red text-white shadow-lg'
+                  ? 'bg-speakup-red text-white shadow-lg'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`
             }

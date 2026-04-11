@@ -10,8 +10,7 @@ const Login = () => {
   const { login, user } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    role: 'ADMIN'
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +28,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const result = await login(formData.email, formData.password, formData.role);
+    const result = await login(formData.email, formData.password);
 
     if (result.success) {
       toast.success('Login successful!');
@@ -42,65 +41,43 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-cosmic-darker dark:via-cosmic-dark dark:to-cosmic-gray px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-speakup-darker dark:via-speakup-dark dark:to-speakup-gray px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-block mb-4"
-          >
-            <div className="w-24 h-24 mx-auto bg-cosmic-red rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-4xl text-white font-bold">CA</span>
-            </div>
-          </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Cosmic Academy
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Management System
-          </p>
-        </div>
-
-        {/* Login Form */}
+        {/* Login Form Container */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-white dark:bg-cosmic-gray rounded-2xl shadow-2xl p-8"
+          className="bg-white dark:bg-speakup-gray rounded-2xl shadow-2xl p-8"
         >
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-            Sign In
-          </h2>
+          {/* Logo and Title */}
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="inline-block mb-4"
+            >
+              <div className="w-24 h-24 mx-auto bg-[var(--logo-bg)] rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
+                <img src="/logo.png" alt="SpeakUP Logo" className="w-full h-full object-contain p-2" />
+              </div>
+            </motion.div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              SpeakUP Academy
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Sign in to Management System
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Role
-              </label>
-              <div className="relative">
-                <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-cosmic-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cosmic-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-                >
-                  <option value="ADMIN">Admin</option>
-                  <option value="TEACHER">Teacher</option>
-                  <option value="STUDENT">Student</option>
-                </select>
-              </div>
-            </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address
@@ -111,8 +88,8 @@ const Login = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-cosmic-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cosmic-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-                  placeholder="admin@cosmic.academy"
+                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-speakup-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-speakup-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                  placeholder="enter your email"
                   required
                 />
               </div>
@@ -129,7 +106,7 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-11 pr-10 py-3 bg-gray-50 dark:bg-cosmic-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cosmic-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
+                  className="w-full pl-11 pr-10 py-3 bg-gray-50 dark:bg-speakup-dark border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-speakup-red focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
                   placeholder="••••••••"
                   required
                 />
@@ -147,7 +124,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-cosmic-red hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full bg-speakup-red hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>
@@ -166,7 +143,7 @@ const Login = () => {
         
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
-          © 2026 Cosmic Academy. All rights reserved.
+          © 2026 SpeakUP Academy. All rights reserved.
         </p>
       </motion.div>
     </div>

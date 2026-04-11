@@ -115,7 +115,7 @@ function App() {
               <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
           </BrowserRouter>
-          <Toaster position="top-right" richColors />
+          <Toaster position="top-center" richColors />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

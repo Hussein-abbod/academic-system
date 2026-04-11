@@ -9,7 +9,7 @@ const AdminLayout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-cosmic-darker">
+    <div className="min-h-screen bg-gray-50 dark:bg-speakup-darker">
       {/* Mobile backdrop overlay */}
       {sidebarOpen && (
         <div

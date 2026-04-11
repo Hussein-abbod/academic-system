@@ -76,7 +76,7 @@ app.include_router(notifications_router)
 async def root():
     """API root endpoint"""
     return {
-        "message": "Welcome to Cosmic Academy Management System API",
+        "message": "Welcome to SpeakUP Academy Management System API",
         "version": settings.VERSION,
     }
 

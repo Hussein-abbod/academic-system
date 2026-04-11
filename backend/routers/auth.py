@@ -43,7 +43,7 @@ async def login(
             detail="Invalid credentials",
         )
 
-    if user.role != login_data.role:
+    if login_data.role and user.role != login_data.role:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"User does not have {login_data.role} role",

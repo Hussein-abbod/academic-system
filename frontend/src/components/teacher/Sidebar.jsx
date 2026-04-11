@@ -37,12 +37,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Logo Section */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="bg-gradient-to-tr from-purple-500 to-indigo-600 text-white p-2 rounded-lg shrink-0">
-              <GraduationCap size={24} />
+            <div className="w-10 h-10 bg-[var(--logo-bg)] rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="/logo.png" alt="SpeakUP Logo" className="w-full h-full object-contain p-1" />
             </div>
             {isOpen && (
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
-                Cosmic Teacher
+                SpeakUP Teacher
               </span>
             )}
           </div>
@@ -74,7 +74,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   className={({ isActive }) => `
                     flex items-center p-3 rounded-lg group transition-colors relative overflow-hidden
                     ${isActive
-                      ? 'bg-gradient-to-r from-cosmic-50 to-purple-50 text-cosmic-600 dark:from-cosmic-900/20 dark:to-purple-900/20 dark:text-cosmic-400'
+                      ? 'bg-gradient-to-r from-speakup-50 to-purple-50 text-speakup-600 dark:from-speakup-900/20 dark:to-purple-900/20 dark:text-speakup-400'
                       : 'text-gray-900 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}

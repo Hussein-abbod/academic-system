@@ -7,7 +7,7 @@ const Select = ({ value, onChange, options, placeholder = "Select option", class
       <select
         value={value}
         onChange={onChange}
-        className={`w-full appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg py-2.5 pl-4 pr-10 focus:ring-2 focus:ring-cosmic-500 focus:border-transparent outline-none transition-all cursor-pointer ${className}`}
+        className={`w-full appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg py-2.5 pl-4 pr-10 focus:ring-2 focus:ring-speakup-500 focus:border-transparent outline-none transition-all cursor-pointer ${className}`}
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (

@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     CLOUDINARY_URL: str = ""
 
     # Application
-    APP_NAME: str = "Cosmic Academy Management System"
+    APP_NAME: str = "SpeakUP Academy Management System"
     VERSION: str = "1.0.0"
 
     class Config:

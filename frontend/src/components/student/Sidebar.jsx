@@ -37,12 +37,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Logo Section */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="bg-gradient-to-tr from-green-500 to-emerald-600 text-white p-2 rounded-lg shrink-0">
-              <GraduationCap size={24} />
+            <div className="w-10 h-10 bg-[var(--logo-bg)] rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="/logo.png" alt="SpeakUP Logo" className="w-full h-full object-contain p-1" />
             </div>
             {isOpen && (
               <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent whitespace-nowrap">
-                Cosmic Student
+                SpeakUP Student
               </span>
             )}
           </div>

@@ -43,7 +43,7 @@ const Navbar = ({ onToggle }) => {
           <Link
             to="/admin/profile"
             title="My Profile"
-            className="w-9 h-9 md:w-10 md:h-10 bg-cosmic-red rounded-full flex items-center justify-center text-white font-bold text-sm hover:opacity-80 transition-opacity"
+            className="w-9 h-9 md:w-10 md:h-10 bg-speakup-red rounded-full flex items-center justify-center text-white font-bold text-sm hover:opacity-80 transition-opacity"
           >
             {user?.full_name?.charAt(0)?.toUpperCase() || 'A'}
           </Link>

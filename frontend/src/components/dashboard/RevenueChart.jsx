@@ -15,7 +15,7 @@ import api from '../../utils/api';
 import Card from '../ui/Card';
 
 const RevenueChart = () => {
-  const [period, setPeriod] = useState('6m'); // '30d', '6m', '1y', 'all'
+  const [period, setPeriod] = useState('6m'); // 'month', '6m', '1y', 'all'
 
   // Fetch aggregated revenue data
   const { data: chartData = [], isLoading: isChartLoading } = useQuery({
@@ -81,7 +81,7 @@ const RevenueChart = () => {
     // Monthly format: 'YYYY-MM'
     const [year, month] = dateStr.split('-');
     const d = new Date(parseInt(year), parseInt(month) - 1);
-    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
   return (
@@ -99,7 +99,7 @@ const RevenueChart = () => {
         </div>
         
         <div className="flex items-center gap-2 bg-gray-100 dark:bg-slate-700/50 p-1 rounded-lg">
-          {['30d', '6m', '1y', 'all'].map((p) => (
+          {['month', '6m', '1y', 'all'].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -109,7 +109,7 @@ const RevenueChart = () => {
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              {p === '30d' ? '30 Days' : p === '6m' ? '6 Months' : p === '1y' ? '1 Year' : 'All Time'}
+              {p === 'month' ? 'This Month' : p === '6m' ? '6 Months' : p === '1y' ? '1 Year' : 'All Time'}
             </button>
           ))}
         </div>

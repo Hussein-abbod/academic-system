@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Cloudinary Cloud Storage
     CLOUDINARY_URL: str = ""
 
+    # AI Feature (Groq)
+    GROQ_API_KEY: str = ""
+
     # Application
     APP_NAME: str = "SpeakUP Academy Management System"
     VERSION: str = "1.0.0"

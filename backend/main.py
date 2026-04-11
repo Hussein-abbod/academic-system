@@ -10,13 +10,13 @@ from limiter import limiter
 from database import Base, engine
 from routers import auth
 from routers.admin import users, courses, enrollments, payments, statistics
-from routers import teacher, student
+from routers import teacher, student, student_ai, admin_ai
 from routers.notifications import router as notifications_router
 from routers.uploads import router as uploads_router
+from models import ai_advisor  # Import to register models with Base
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
-
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Add security response headers to every response."""
@@ -31,7 +31,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Uncomment the line below when serving over HTTPS:
         # response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         return response
-
 
 # Create FastAPI application — hide docs in production (DEBUG=false)
 app = FastAPI(
@@ -70,6 +69,8 @@ app.include_router(statistics.router)
 app.include_router(teacher.router)
 app.include_router(student.router)
 app.include_router(notifications_router)
+app.include_router(student_ai.router)
+app.include_router(admin_ai.router)
 
 
 @app.get("/")
@@ -85,3 +86,4 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+

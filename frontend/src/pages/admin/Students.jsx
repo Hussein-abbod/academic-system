@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, User, BookOpen, TrendingUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, User, BookOpen, TrendingUp, Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../utils/api';
 import Table from '../../components/ui/Table';
@@ -13,6 +13,7 @@ const Students = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({
@@ -21,6 +22,11 @@ const Students = () => {
     full_name: '',
     phone_number: '',
     role: 'STUDENT'
+  });
+
+  const [aiFormData, setAiFormData] = useState({
+    level: 'BASIC',
+    daily_minutes_limit: 60
   });
 
   const queryClient = useQueryClient();
@@ -94,6 +100,33 @@ const Students = () => {
     }
   });
 
+  // AI Setup Mutation
+  const aiMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await api.post(`/admin/ai-advisor/subscribe/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('AI Setup updated successfully!');
+      setIsAiModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to update AI setup');
+    }
+  });
+
+  const aiUnsubscribeMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/admin/ai-advisor/unsubscribe/${id}`);
+    },
+    onSuccess: () => {
+      toast.success('AI Access revoked successfully!');
+      setIsAiModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to revoke AI access');
+    }
+  });
 
 
   const resetForm = () => {
@@ -132,6 +165,16 @@ const Students = () => {
     deleteMutation.mutate(selectedStudent.id);
   };
 
+  const handleAiSetup = (student) => {
+    setSelectedStudent(student);
+    setAiFormData({ level: 'BASIC', daily_minutes_limit: 60 });
+    setIsAiModalOpen(true);
+  };
+
+  const handleAiSubmit = (e) => {
+    e.preventDefault();
+    aiMutation.mutate({ id: selectedStudent.id, data: aiFormData });
+  };
 
 
   const handleSubmitCreate = (e) => {
@@ -214,6 +257,13 @@ const Students = () => {
       accessorKey: 'actions',
       cell: (row) => (
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleAiSetup(row)}
+            className="p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 transition-colors"
+            title="AI Setup"
+          >
+            <Mic className="w-4 h-4" />
+          </button>
           <button
             onClick={() => handleEdit(row)}
             className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
@@ -339,10 +389,96 @@ const Students = () => {
         />
       </Modal>
 
+      {/* AI Setup Modal */}
+      <Modal
+        isOpen={isAiModalOpen}
+        onClose={() => {
+          setIsAiModalOpen(false);
+          setSelectedStudent(null);
+        }}
+        title={`AI Advisor Setup - ${selectedStudent?.full_name}`}
+        size="md"
+      >
+        <AiSetupForm
+          formData={aiFormData}
+          setFormData={setAiFormData}
+          onSubmit={handleAiSubmit}
+          onRevoke={() => aiUnsubscribeMutation.mutate(selectedStudent.id)}
+          onCancel={() => {
+            setIsAiModalOpen(false);
+            setSelectedStudent(null);
+          }}
+          isLoading={aiMutation.isPending}
+          isRevoking={aiUnsubscribeMutation.isPending}
+        />
+      </Modal>
 
     </div>
   );
 };
+
+// AI Setup Form
+const AiSetupForm = ({ formData, setFormData, onSubmit, onRevoke, onCancel, isLoading, isRevoking }) => (
+  <form onSubmit={onSubmit} className="space-y-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Proficiency Level
+      </label>
+      <select
+        value={formData.level}
+        onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+        className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+      >
+        <option value="BASIC">Basic (A1)</option>
+        <option value="INTERMEDIATE">Intermediate (B1)</option>
+        <option value="ADVANCED">Advanced (C1)</option>
+      </select>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Daily Limit (Minutes)
+      </label>
+      <select
+        value={formData.daily_minutes_limit}
+        onChange={(e) => setFormData({ ...formData, daily_minutes_limit: parseInt(e.target.value) })}
+        className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+      >
+        <option value={30}>30 Minutes</option>
+        <option value={60}>1 Hour</option>
+        <option value={120}>2 Hours</option>
+      </select>
+    </div>
+    
+    <div className="flex justify-between pt-4">
+      <button
+        type="button"
+        onClick={onRevoke}
+        disabled={isRevoking}
+        className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 transition-colors"
+      >
+        {isRevoking ? 'Revoking...' : 'Revoke Access'}
+      </button>
+      
+      <div className="flex gap-3">
+        <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+        >
+            Cancel
+        </button>
+        <button
+            type="submit"
+            disabled={isLoading}
+            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+        >
+            {isLoading ? 'Saving...' : 'Authorize AI'}
+        </button>
+      </div>
+    </div>
+  </form>
+);
 
 // StudentForm component
 const StudentForm = ({ formData, setFormData, onSubmit, onCancel, isLoading, isEdit }) => (

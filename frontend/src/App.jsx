@@ -27,6 +27,7 @@ import TeacherSchedule from './pages/teacher/MySchedule';
 
 import StudentLayout from './layouts/StudentLayout';
 import StudentDashboard from './pages/student/Dashboard';
+import AiAdvisor from './pages/student/AiAdvisor';
 import MyLearning from './pages/student/MyCourses';
 import StudentCourseDetails from './pages/student/CourseDetails';
 import MyPayments from './pages/student/MyPayments';
@@ -102,6 +103,7 @@ function App() {
                 }
               >
                 <Route index element={<StudentDashboard />} />
+                <Route path="ai-advisor" element={<AiAdvisor />} />
                 <Route path="courses" element={<MyLearning />} />
                 <Route path="courses/:id" element={<StudentCourseDetails />} />
                 <Route path="schedule" element={<MySchedule />} />

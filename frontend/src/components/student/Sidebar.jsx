@@ -12,7 +12,8 @@ import {
   User,
   ClipboardList,
   CalendarDays,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -24,6 +25,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: CalendarDays, label: 'My Schedule', path: '/student/schedule' },
     { icon: ClipboardList, label: 'Quizzes', path: '/student/quizzes' },
     { icon: CreditCard, label: 'My Payments', path: '/student/payments' },
+    { icon: MessageSquare, label: 'AI Advisor', path: '/student/ai-advisor' },
     { icon: User, label: 'Profile', path: '/student/profile' },
   ];
 

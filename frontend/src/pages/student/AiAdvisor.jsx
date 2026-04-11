@@ -12,6 +12,9 @@ const AiAdvisor = () => {
   const [transcript, setTranscript] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
+  const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
+  const [translations, setTranslations] = useState({}); // { messageIndex: translation }
   
   const recognitionRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
@@ -81,7 +84,35 @@ const AiAdvisor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['ai-advisor-status']);
       setTranscript('');
+      setTranslations({});
       toast.success('Conversation history reset!');
+    }
+  });
+
+  // Settings mutation
+  const settingsMutation = useMutation({
+    mutationFn: async (native_language) => {
+      const response = await api.patch('/student/ai-advisor/settings', { native_language });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['ai-advisor-status']);
+      toast.success('Native language updated!');
+    }
+  });
+
+  // Translate mutation
+  const translateMutation = useMutation({
+    mutationFn: async ({ text, index }) => {
+      const response = await api.post('/student/ai-advisor/translate', { text });
+      return { translation: response.data.translation, index };
+    },
+    onSuccess: ({ translation, index }) => {
+      setTranslations(prev => ({ ...prev, [index]: translation }));
+      setSelectedText(''); // Hide button after success
+    },
+    onError: () => {
+        toast.error('Failed to translate');
     }
   });
 
@@ -256,6 +287,34 @@ const AiAdvisor = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Text selection handler
+  const handleTextSelection = (e) => {
+    const selection = window.getSelection();
+    const text = selection.toString().trim();
+    
+    if (text.length > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      // Position the button slightly above the selection
+      setSelectionPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top + window.scrollY - 10
+      });
+      setSelectedText(text);
+    } else {
+      setSelectedText('');
+    }
+  };
+
+  const handleTranslateClick = (index) => {
+    if (selectedText) {
+      translateMutation.mutate({ text: selectedText, index });
+    }
+  };
+
+  const languages = ["Arabic", "Spanish", "French", "German", "Chinese", "Japanese", "Turkish", "Italian", "Portuguese", "Russian"];
+
   if (statusLoading && !status) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -303,7 +362,32 @@ const AiAdvisor = () => {
             Resets automatically at midnight.
           </p>
 
-          <div className="w-full font-bold">
+          <div className="w-full font-bold space-y-4">
+             {/* Native Language Input */}
+             <div className="text-left">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Native Language</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    placeholder="e.g. Arabic, French..."
+                    defaultValue={status.native_language || "Arabic"}
+                    onBlur={(e) => {
+                      if (e.target.value && e.target.value !== status.native_language) {
+                        settingsMutation.mutate(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        settingsMutation.mutate(e.target.value);
+                        e.target.blur();
+                      }
+                    }}
+                    className="w-full bg-slate-800/50 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-600"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1 italic">Press Enter to save</p>
+             </div>
+
              {!status.has_access ? (
                 <div className="px-4 py-3 bg-red-900/40 text-red-400 rounded-xl font-bold border border-red-900/50 text-sm">
                   Time limit reached for today
@@ -420,13 +504,31 @@ const AiAdvisor = () => {
                   animate={{ opacity: 1, y: 0 }}
                   key={idx} 
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  onMouseUp={msg.role === 'assistant' ? handleTextSelection : null}
                 >
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm md:text-base ${
+                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm md:text-base selection:bg-emerald-500/30 ${
                     msg.role === 'user' 
                       ? 'bg-emerald-600 text-white rounded-tr-none' 
                       : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200 shadow-sm border border-gray-100 dark:border-slate-700 rounded-tl-none'
                   }`}>
                     <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    
+                    {/* Inline Translation Result */}
+                    {translations[idx] && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-700"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-tighter text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Translation</span>
+                          <span className="text-[10px] text-gray-400 font-medium">{status.native_language}</span>
+                        </div>
+                        <p className="text-gray-600 dark:text-slate-400 italic text-sm leading-relaxed">
+                          {translations[idx]}
+                        </p>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -440,6 +542,46 @@ const AiAdvisor = () => {
           )}
         </div>
       </Card>
+
+      {/* Floating Translate Button */}
+      <AnimatePresence>
+        {selectedText && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            onClick={() => {
+              // Find which message index is closest to selection
+              // For simplicity, we can use the last assistant message or better, 
+              // check which message bubble is actually containing the selection.
+              // Here we'll find the message containing the selection
+              const selection = window.getSelection();
+              const container = selection.anchorNode.parentElement;
+              const messageEl = container.closest('.flex');
+              if (messageEl) {
+                // Find index in history
+                const allMessages = document.querySelectorAll('.custom-scrollbar > div');
+                const index = Array.from(allMessages).indexOf(messageEl);
+                if (index !== -1) handleTranslateClick(index);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              left: selectionPosition.x,
+              top: selectionPosition.y,
+              transform: 'translateX(-50%) translateY(-100%)'
+            }}
+            className="z-[100] flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full shadow-2xl border border-slate-700 hover:bg-emerald-600 transition-colors text-sm font-semibold"
+          >
+            {translateMutation.isPending ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Volume2 className="w-3 h-3 text-emerald-400" />
+            )}
+            Translate
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

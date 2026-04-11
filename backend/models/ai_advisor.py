@@ -21,6 +21,7 @@ class AiSubscription(Base):
     minutes_used_today = Column(Float, nullable=False, default=0.0)
     last_used_date = Column(Date, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    native_language = Column(String(50), nullable=True, default="Arabic")
 
     # Relationship to user
     student = relationship("User")

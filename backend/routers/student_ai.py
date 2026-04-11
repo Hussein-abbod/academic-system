@@ -7,7 +7,10 @@ from config import settings
 from database import get_db
 from models.user import User, UserRole
 from models.ai_advisor import AiSubscription, AiConversationState, ProficiencyLevel
-from schemas.ai_advisor import AiStatusResponse, ChatMessageRequest, ChatMessageResponse
+from schemas.ai_advisor import (
+    AiStatusResponse, ChatMessageRequest, ChatMessageResponse, 
+    UpdateSettingsRequest, TranslationRequest, TranslationResponse
+)
 from auth.dependencies import get_current_user
 
 # Lazy-loaded Groq client
@@ -96,7 +99,8 @@ async def get_status(
         minutes_used_today=sub.minutes_used_today,
         time_remaining_seconds=remaining_secs,
         has_access=(remaining_secs > 0),
-        history=history
+        history=history,
+        native_language=sub.native_language
     )
 
 
@@ -225,8 +229,61 @@ async def tick_time(
         minutes_used_today=sub.minutes_used_today,
         time_remaining_seconds=remaining_secs,
         has_access=(remaining_secs > 0),
-        history=history
+        history=history,
+        native_language=sub.native_language
     )
+
+@router.patch("/settings", response_model=AiStatusResponse)
+async def update_settings(
+    request: UpdateSettingsRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Updates student's AI Advisor settings (like native language)."""
+    sub = db.query(AiSubscription).filter(AiSubscription.student_id == current_user.id).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    sub.native_language = request.native_language
+    db.commit()
+    
+    # Delegate to get_status to return full consistent object
+    return await get_status(current_user, db)
+
+@router.post("/translate", response_model=TranslationResponse)
+async def translate_text(
+    request: TranslationRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Translates text to user's native language using AI."""
+    client = get_groq_client()
+    if not client:
+        raise HTTPException(status_code=503, detail="AI Service unconfigured")
+
+    sub = db.query(AiSubscription).filter(AiSubscription.student_id == current_user.id).first()
+    target_lang = sub.native_language if sub and sub.native_language else "Arabic"
+
+    prompt = (
+        f"You are a professional language tutor and translator. Translate the following text into {target_lang}.\n\n"
+        "Rules:\n"
+        "1. If the text is a SINGLE WORD or a SHORT IDIOM: First provide the translation. Then, provide a very brief, simple explanation in {target_lang} about when or how this word is used (e.g., 'Used to describe...' or 'Formal/Informal').\n"
+        "2. If the text is a FULL SENTENCE: Provide ONLY the translation and nothing else.\n"
+        "3. Keep the response concise and clear.\n\n"
+        f"Text to process: {request.text}"
+    )
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=200
+        )
+        translation = completion.choices[0].message.content.strip()
+        return TranslationResponse(translation=translation)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/history")
 async def reset_history(

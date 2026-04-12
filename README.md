@@ -1,154 +1,235 @@
-# SpeakUP Academy Management System
+# SpeakUP — Academic English Institute Management System
 
-![Project Status](https://img.shields.io/badge/Status-Active-success)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
-![Python](https://img.shields.io/badge/Python-3.10+-yellow)
-![React](https://img.shields.io/badge/React-18-cyan)
+<div align="center">
 
-A robust, enterprise-grade **Academic English Institute Management System** engineered for scalability and performance. Built with a modern full-stack ecosystem to digitize and manage complete institute operations, including role-based authentication, course scheduling, enrollment tracking, and interactive real-time dashboard analytics.
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-1.2.0-blue?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10+-yellow?style=for-the-badge&logo=python)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-## 🌟 Project Overview
+**A full-stack, enterprise-grade management platform for English language institutes.**  
+Built to digitize every aspect of institute operations — from enrollment and billing to AI-powered conversation tutoring.
 
-This architecture was specifically developed to bridge the gap between traditional academic institute administration and modern digital transformation. It centralizes student operations, teacher management, and administrative oversight into a cohesive, secure interface. The system ensures robust data integrity, enforces strict access control through JWT authentication, and delivers actionable insights to stakeholders.
-
----
-
-## 🚀 Key Technical Features
-
-### 🛡️ Robust Administrative & Security Controls
-- **Role-Based Access Control (RBAC)**: Comprehensive security using JWT tokens allowing strict context separation for Admins, Teachers, and Students.
-- **Analytics Dashboard**: Aggregated real-time metrics for active user retention, financial charting, teacher utilization, and live active courses.
-- **Course & Level Lifecycle**: Zero-friction CRUD infrastructure for multi-tiered proficiency courses (Beginner, Intermediate, Advanced).
-
-### 👥 User & Enrollment Optimization
-- **Entity Lifecycle Management**: Intuitive dashboard screens to onboard and oversee teacher capacities and student profiles.
-- **Streamlined Workflow**: Secure course assignments mapping students functionally to tracking arrays.
-- **Financial Status Management**: Modular transaction models mapping tuition logs (Paid, Pending, Partial).
-
-### 🎨 Progressive UI/UX System
-- **Responsive Architecture**: Mobile-first fluid interface leveraging complete Tailwind CSS grid/flex optimizations.
-- **Dynamic Theming Integration**: Centralized UI state enabling live dark/light mode toggling based on native preferences.
-- **Micro-Interactions**: Enriched with `framer-motion` to provide a snappy, application-like experience feeling organic and premium.
+</div>
 
 ---
 
-## 🛠⚙️ Technical Architecture & Stack
+## 📖 Overview
 
-### Backend Services (API)
-- **Framework:** FastAPI (Python) - *Adopted for unparalleled async performance and rapid REST API delivery.*
-- **Database Architecture:** Relational DB (MySQL) orchestrated via **SQLAlchemy ORM**.
-- **Data Validation & Parsing:** Pydantic - *Strict static type checking to prevent injection and format errors.*
-- **Cloud Infrastructure:** Integrated with **Cloudinary** for high-availability media/asset delivery.
-
-### Frontend Client
-- **Core Library:** React 18 coupled with Vite.js - *Resulting in micro-second Fast Refresh compilation and highly optimized build assets.*
-- **Global State / Remote Caching:** React Query & Axios - *Asynchronous state management reducing redundant API hits.*
-- **Styling Pipeline:** Tailwind CSS.
+SpeakUP is a comprehensive Academic Management System designed for English language institutes. It provides a unified platform for administrators, teachers, and students — covering course management, attendance, payments, real-time analytics, and an integrated AI Language Tutor powered by Groq LLMs.
 
 ---
 
-## 📋 System Requirements
+## ✨ Feature Highlights
 
-Ensure you have the following installed on your local development machine:
+### 🛡️ Administrator Portal
+- **Role-Based Access Control (RBAC)** — Strict JWT-secured separation between Admin, Teacher, and Student roles.
+- **Interactive Dashboard** — Live revenue charts (filterable by 6 months, 1 year, all time), enrollment statistics, and a financial overview.
+- **Course & Level Management** — Full CRUD for courses with proficiency levels (Beginner, Intermediate, Advanced) and monthly pricing.
+- **Enrollment Management** — Assign students to courses, track status (Active / Completed / Dropped), and view the full enrollment table.
+- **Payment Management** — Record and track student payments per enrollment or AI subscription. Supports Paid, Pending, and Partial statuses.
+- **Attendance Tracking** — Mark and review student attendance records per course session.
+- **Quiz Management** — Create and publish quizzes linked to specific courses.
+- **Student & Teacher Profiles** — Manage user accounts, profile photos (via Cloudinary), and personal details.
 
-- **Python** `3.10` or higher
-- **Node.js** `18.0` or higher
-- **Database Service**: MySQL (via XAMPP)
-- **Cloudinary Account** (Optional, for media asset testing)
+### 🤖 AI Language Advisor (Subscription Feature)
+- **Admin-Assigned Subscriptions** — Admins assign students to the AI Advisor directly from the Enrollment page, with configurable:
+  - Proficiency level (Basic / Intermediate / Advanced)
+  - Daily session time limit (minutes)
+  - Monthly subscription fee
+- **Edit & Revoke** — Admins can update subscription settings or revoke access at any time.
+- **Financial Integration** — AI subscription fees appear in both the admin Payments module and the student's payment history alongside standard course fees.
+- **Billing Tracking** — Monthly fees are tracked from enrollment date, and outstanding balances are calculated automatically.
+
+### 🧠 AI Conversation Tutor (Student Feature)
+- **Groq-Powered LLM** — Conversational AI tutor using `llama-3.3-70b-versatile` model via Groq API.
+- **Level-Adaptive Responses** — The AI dynamically adjusts complexity and vocabulary to the student's assigned proficiency level (A1/A2 → C1/C2).
+- **Grammar Correction** — Every reply includes a gentle correction or praise for the student's previous message.
+- **Daily Limit Enforcement** — Sessions are tracked and capped at the admin-configured daily minute limit.
+- **Instant Translation** — Built-in text translator that returns a clean, direct translation into the student's native language, no explanations.
+
+### 🎓 Student Portal
+- **Personal Dashboard** — Overview of active/completed courses, outstanding balance, and AI Advisor status.
+- **My Courses** — View enrolled courses, progress, and course details.
+- **My Payments** — Full payment history split between courses and AI subscription fees, with balance tracking.
+- **Notification Center** — Real-time dropdown notifications for:
+  - New quiz publications
+  - Payment confirmations
+  - Enrollment confirmations (courses & AI Advisor)
+  - Attendance records
+- **AI Tutor Access** — Chat interface with session timer, message history, and the instant translation tool.
+
+### 👨‍🏫 Teacher Portal
+- **Course Dashboard** — Overview of assigned courses and enrolled students.
+- **Attendance Management** — Mark and update attendance records.
+- **Quiz Creator** — Build and publish quizzes for enrolled students.
+- **Student Progress** — View student profiles and track performance.
 
 ---
 
-## 🔧 Installation & Local Setup 
+## 🛠️ Tech Stack
 
-Follow these steps to bootstrap the system locally.
+| Layer | Technology |
+|---|---|
+| **Backend** | Python 3.10+, FastAPI, SQLAlchemy ORM |
+| **Database** | MySQL (local via XAMPP or cloud via Aiven) |
+| **Authentication** | JWT (OAuth2 Bearer) via `python-jose` |
+| **AI Integration** | Groq API — `llama-3.3-70b-versatile` |
+| **Media Storage** | Cloudinary |
+| **Frontend** | React 18, Vite, TanStack Query (React Query), Axios |
+| **Styling** | Tailwind CSS, Framer Motion |
+| **Charts** | Recharts |
 
-### 1. Database Configuration
-Open your SQL client or CLI and generate the target database:
+---
+
+## 📋 Prerequisites
+
+- **Python** `3.10+`
+- **Node.js** `18.0+`
+- **MySQL** (via XAMPP or any MySQL-compatible service)
+- **Groq API Key** — [Get one free at groq.com](https://console.groq.com)
+- **Cloudinary Account** — [cloudinary.com](https://cloudinary.com) *(optional, for profile photos)*
+
+---
+
+## 🚀 Local Setup
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Hussein-abbod/academic-system.git
+cd academic-system
+```
+
+### 2. Database Setup
 ```sql
 CREATE DATABASE academic_system;
 ```
 
-### 2. Backend Initialization
+### 3. Backend Setup
 ```bash
-# Navigate to the backend directory
 cd backend
 
-# Create and activate a pristine Python virtual environment
+# Create & activate virtual environment
 python -m venv venv
-# Windows: .\venv\Scripts\activate
-# Mac/Linux: source venv/bin/activate
+# Windows:
+.\venv\Scripts\activate
+# Mac/Linux:
+source venv/bin/activate
 
-# Install strictly verified dependencies
+# Install dependencies
 pip install -r requirements.txt
-
-# (Optional) Update your .env file with appropriate URIs:
-# DATABASE_URL=mysql+pymysql://root:@localhost:3306/academic_system
-
-# Seed configuration schemas and generate all relational tables
-python init_db.py
 ```
 
-### 3. Frontend Initialization
+### 4. Configure Environment Variables
+Create a `.env` file inside the `backend/` directory:
+```env
+# Database
+DATABASE_URL=mysql+pymysql://root:@localhost:3306/academic_system
+
+# JWT
+SECRET_KEY=your_strong_secret_key_here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Groq AI
+GROQ_API_KEY=your_groq_api_key_here
+
+# Cloudinary (optional)
+CLOUDINARY_URL=cloudinary://your_cloudinary_url_here
+
+# App
+DEBUG=false
+CORS_ORIGINS=["http://localhost:5173"]
+```
+
+### 5. Initialize the Database & Run Backend
 ```bash
-# Open a new terminal instance and navigate to frontend
+# Seed tables and default admin account
+python init_db.py
+
+# Start the API server
+uvicorn main:app --reload
+```
+
+### 6. Frontend Setup
+```bash
 cd frontend
-
-# Install package lock tree
 npm install
-
-# Initialize the Vite development server
 npm run dev
 ```
 
-### 4. Running the Application
-Once properly initialized, your microservice stack is available at:
-- **FastAPI Backend Service:** `http://localhost:8000` 
-  - *Interactive API Documentation available at:* `http://localhost:8000/docs`
-- **React Frontend Application:** `http://localhost:5173`
+### 7. Access the Application
+| Service | URL |
+|---|---|
+| Frontend App | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
 
 ---
 
-## 🔐 System Default Testing Credentials
+## 🔐 Default Login Credentials
 
-Use the following credentials to access the primary administrative layer:
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@speakup.academy` | `admin123` |
 
-- **System Administrator Email:** `admin@speakup.academy`
-- **Password:** `admin123`
-- **Authorization Context:** Admin
+> **Note:** Change this password immediately after first login in a production environment.
 
 ---
 
-## 📁 Macro Structure
+## 📁 Project Structure
 
-A brief overview of the folder hierarchy.
-
-```text
-SpeakUP Academy System/
+```
+academic-system/
 ├── backend/
-│   ├── models/          # Relational Database Mappings (SQLAlchemy)
-│   ├── routers/         # Highly Modular Request Controllers 
-│   ├── schemas/         # Pydantic Typing/Validation Objects
-│   ├── auth/            # JWT Token Services and Encoders
-│   └── main.py          # FastAPI ASGI Entry Node
-├── frontend/
-│   ├── src/
-│   │   ├── components/  # Atomic and Composite React Components
-│   │   ├── contexts/    # React Contexts (Auth, Theme)
-│   │   ├── layouts/     # Primary System Scaffolds
-│   │   ├── pages/       # Route-specific View Injection
-│   │   └── utils/       # Modular Helpers and API Adapters
-│   └── tailwind.config.js
-└── README.md
+│   ├── auth/               # JWT token services & dependencies
+│   ├── models/             # SQLAlchemy database models
+│   │   ├── user.py
+│   │   ├── course.py
+│   │   ├── enrollment.py
+│   │   ├── payment.py
+│   │   ├── attendance.py
+│   │   ├── quiz.py
+│   │   └── ai_advisor.py
+│   ├── routers/            # API route controllers
+│   │   ├── admin/          # Admin-specific routes
+│   │   ├── student/        # Student-specific routes
+│   │   ├── teacher/        # Teacher-specific routes
+│   │   ├── admin_ai.py     # AI subscription management
+│   │   ├── student_ai.py   # AI tutor chat & translation
+│   │   └── notifications.py
+│   ├── schemas/            # Pydantic request/response models
+│   ├── config.py           # App configuration & env loading
+│   ├── database.py         # SQLAlchemy engine & session
+│   ├── init_db.py          # DB seeder
+│   └── main.py             # FastAPI app entry point
+└── frontend/
+    └── src/
+        ├── components/     # Reusable UI components
+        │   ├── dashboard/  # Charts & dashboard widgets
+        │   ├── shared/     # Navbar, notifications dropdown
+        │   └── ui/         # Buttons, cards, modals, tables
+        ├── contexts/       # Auth & Theme React contexts
+        ├── layouts/        # Admin, Student, Teacher shell layouts
+        ├── pages/          # Route-level views
+        │   ├── admin/
+        │   ├── student/
+        │   └── teacher/
+        └── utils/          # Axios API adapter & helpers
 ```
 
 ---
 
-## 🔜 Strategic Road Map
+## 📄 License
 
-- [ ] **Phase 2:** Teacher Dashboard Deployment (Quiz orchestration, dynamic grading metrics).
-- [ ] **Phase 3:** Student Experience Evolution (Interactive exam interfaces, visual progression timeline).
-- [ ] **Phase 4:** Generative AI NLP Integration (Automated speaking fluency evaluations).
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
 
-> Built and conceptualized as a holistic representation of modern software engineering principles and full-stack integration expertise.
+<div align="center">
+
+Built with ❤️ as a holistic demonstration of modern full-stack engineering — FastAPI, React, AI integration, and enterprise-grade UX.
+
+</div>

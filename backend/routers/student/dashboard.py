@@ -100,6 +100,7 @@ async def get_dashboard_stats(
         "completed_courses": completed_courses,
         "average_progress": round(avg_progress, 1),
         "recent_quizzes": recent_quizzes,
+        "ai_advisor_active": bool(ai_sub and ai_sub.is_active),
         "financials": {
             "total_expected": round(total_course_expected + total_ai_expected, 2),
             "total_paid": round(total_course_paid + total_ai_paid, 2),

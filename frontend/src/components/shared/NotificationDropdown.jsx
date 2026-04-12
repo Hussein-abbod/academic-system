@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, CreditCard, UserCheck, BookOpen, X, ClipboardList } from 'lucide-react';
+import { Bell, CreditCard, UserCheck, BookOpen, X, ClipboardList, Bot } from 'lucide-react';
 import api from '../../utils/api';
 
 const typeConfig = {
@@ -23,6 +23,11 @@ const typeConfig = {
         icon: ClipboardList,
         color: 'text-amber-600 dark:text-amber-400',
         bg: 'bg-amber-50 dark:bg-amber-900/20',
+    },
+    ai_advisor: {
+        icon: Bot,
+        color: 'text-indigo-600 dark:text-indigo-400',
+        bg: 'bg-indigo-50 dark:bg-indigo-900/20',
     },
 };
 

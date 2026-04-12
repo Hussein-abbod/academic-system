@@ -22,6 +22,12 @@ async def get_notifications(
     since_date = date.today() - timedelta(days=30)
     since_datetime = datetime.utcnow() - timedelta(days=30)
 
+    def to_utc_iso(dt):
+        if hasattr(dt, "time"):
+            if dt.tzinfo is None:
+                return dt.isoformat() + "Z"
+        return dt.isoformat()
+
     if current_user.role == UserRole.STUDENT:
         # 1. Recent payments recorded for this student
         enrollments = db.query(Enrollment).filter(
@@ -49,7 +55,7 @@ async def get_notifications(
                     "type": "payment",
                     "title": "Payment Update",
                     "message": f"Payment of ${float(p.amount):.2f} for {course_name} is {label}.",
-                    "time": p.created_at.isoformat(),
+                    "time": to_utc_iso(p.created_at),
                 })
 
         # 2. Recent attendance records for this student
@@ -69,7 +75,7 @@ async def get_notifications(
                 "type": "attendance",
                 "title": "Attendance Recorded",
                 "message": f"{course_name} on {a.date.strftime('%b %d')}: {raw.capitalize()} {emoji}",
-                "time": a.date.isoformat(),
+                "time": to_utc_iso(a.date),
             })
 
         # 3. Recent enrollment confirmations
@@ -87,7 +93,25 @@ async def get_notifications(
                 "type": "enrollment",
                 "title": "Enrollment Confirmed",
                 "message": f"You have been enrolled in {course_name}.",
-                "time": e.enrollment_date.isoformat(),
+                "time": to_utc_iso(e.enrollment_date),
+            })
+
+        # 3.5 AI Advisor Enrollment
+        from models.ai_advisor import AiSubscription
+        ai_sub = db.query(AiSubscription).filter(
+            AiSubscription.student_id == current_user.id,
+            AiSubscription.is_active == True,
+            AiSubscription.enrolled_at >= since_datetime
+        ).first()
+
+        if ai_sub:
+            level_name = ai_sub.level.value if hasattr(ai_sub.level, "value") else str(ai_sub.level)
+            notifications.append({
+                "id": f"enr-ai-{current_user.id}",
+                "type": "ai_advisor",
+                "title": "Enrollment Confirmed",
+                "message": f"You have been enrolled in AI Advisor ({level_name.capitalize()}).",
+                "time": to_utc_iso(ai_sub.enrolled_at),
             })
 
         # 4. Recently published quizzes in the student's enrolled courses
@@ -114,7 +138,7 @@ async def get_notifications(
                     "type": "quiz",
                     "title": "New Quiz Available 🎯",
                     "message": f"\"{q.title}\" ({quiz_type.capitalize()}) is now available in {course_name}.",
-                    "time": q.updated_at.isoformat(),
+                    "time": to_utc_iso(q.updated_at),
                 })
 
     elif current_user.role == UserRole.TEACHER:
@@ -141,7 +165,7 @@ async def get_notifications(
                     "type": "enrollment",
                     "title": "New Student Enrolled",
                     "message": f"{student_name} enrolled in {course_name}.",
-                    "time": e.enrollment_date.isoformat(),
+                    "time": to_utc_iso(e.enrollment_date),
                 })
 
     # Sort by time descending and return top 20

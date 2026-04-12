@@ -39,17 +39,18 @@ def get_system_prompt(level: ProficiencyLevel):
         "Your goal is to make the student EXCITED to speak. Avoid short, boring answers. "
         "Strict Response Structure: "
         "1. ALWAYS start your response with exactly ONE sentence that gently corrects the student's grammar or pronunciation in their last message. If their grammar was perfect, use this first sentence to specifically praise one thing they did well. "
-        "2. Then, provide your engaging conversational reply (at least two sentences). "
+        "2. Then, provide your engaging conversational reply. "
         "Instead of just answering, tell brief, interesting stories, share fun facts, and use expressive language. "
         "Always follow up with an open-ended question that sparks imagination (don't use emojis). "
+        "3. CRITICAL: Your entire response must NOT exceed a total of 5 sentences. Keep it concise yet engaging."
         "Prioritize keeping the conversation 'alive' and fun."
     )
     if level == ProficiencyLevel.BASIC:
-        return f"{base_prompt} CRITICAL: Use simple A1/A2 English. Use simple words but be very descriptive and enthusiastic. Don't just say 'Yes', say 'Yes! That sounds like a wonderful idea! Shall we go?'"
+        return f"{base_prompt} You must: Use simple A1/A2 English. Use simple words but be very descriptive and enthusiastic. Don't just say 'Yes', say 'Yes! That sounds like a wonderful idea! Shall we go?'"
     elif level == ProficiencyLevel.INTERMEDIATE:
-        return f"{base_prompt} CRITICAL: Use B1/B2 English. Share interesting insights or cultural facts related to the topic. Actively drive the conversation forward with creative scenarios."
+        return f"{base_prompt} You must: Use B1/B2 English. Share interesting insights or cultural facts related to the topic. Actively drive the conversation forward with creative scenarios."
     else:
-        return f"{base_prompt} CRITICAL: Use C1/C2 advanced English. Engage in deep, thoughtful discussion. Use idioms and sophisticated humor to keep it lively."
+        return f"{base_prompt} You must: Use C1/C2 advanced English. Engage in deep, thoughtful discussion. Use idioms and sophisticated humor to keep it lively."
 
 def _check_and_reset_daily_limit(sub: AiSubscription, db: Session):
     today = datetime.utcnow().date()
@@ -265,11 +266,12 @@ async def translate_text(
     target_lang = sub.native_language if sub and sub.native_language else "Arabic"
 
     prompt = (
-        f"You are a professional language tutor and translator. Translate the following text into {target_lang}.\n\n"
+        f"You are a professional translator. Translate the following text into {target_lang}.\n\n"
         "Rules:\n"
-        "1. If the text is a SINGLE WORD or a SHORT IDIOM: First provide the translation. Then, provide a very brief, simple explanation in {target_lang} about when or how this word is used (e.g., 'Used to describe...' or 'Formal/Informal').\n"
-        "2. If the text is a FULL SENTENCE: Provide ONLY the translation and nothing else.\n"
-        "3. Keep the response concise and clear.\n\n"
+        "1. Provide ONLY the direct translation of the text and absolutely nothing else.\n"
+        "2. Do not provide any explanations, definitions, context, or conversational filler.\n"
+        "3. Keep the response extremely concise and clear.\n"
+        "4. Do not write any words in English.\n\n"
         f"Text to process: {request.text}"
     )
 

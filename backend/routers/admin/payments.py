@@ -15,49 +15,76 @@ router = APIRouter(prefix="/admin/payments", tags=["Admin - Payments"])
 
 @router.post("", response_model=PaymentResponse, dependencies=[Depends(require_admin)])
 async def create_payment(payment_data: PaymentCreate, db: Session = Depends(get_db)):
-    """Record a new payment"""
-    # 1. Fetch Enrollment and Course
-    enrollment = db.query(Enrollment).filter(Enrollment.id == payment_data.enrollment_id).first()
-    if not enrollment:
-        raise HTTPException(status_code=404, detail="Enrollment not found")
-
-    course = db.query(Course).filter(Course.id == enrollment.course_id).first()
-    if not course:
-        raise HTTPException(status_code=404, detail="Course associated with enrollment not found")
-
-    # 2. Calculate Total Expected: (Months Enrolled) * Monthly Price
-    enrollment_date = enrollment.enrollment_date
-    now = datetime.utcnow()
+    """Record a new payment for a Course or AI Advisor"""
     
-    # Months = calendar month difference, but only count a new month after
-    # the enrollment anniversary day has been reached.
-    # e.g. enrolled Feb 16 → month 2 starts March 16, not March 1.
-    months_enrolled = (now.year - enrollment_date.year) * 12 + (now.month - enrollment_date.month)
-    if now.day < enrollment_date.day:
-        months_enrolled -= 1  # anniversary day not yet reached this month
-    months_enrolled += 1  # enrollment month itself (month 1)
-    if months_enrolled < 1:
-        months_enrolled = 1
+    # 1. Handle AI Advisor Payment
+    if payment_data.ai_subscription_id:
+        from models.ai_advisor import AiSubscription
+        sub = db.query(AiSubscription).filter(AiSubscription.student_id == payment_data.ai_subscription_id).first()
+        if not sub:
+            raise HTTPException(status_code=404, detail="AI Subscription not found")
+            
+        # Anniversary calculation for AI
+        now = datetime.utcnow()
+        enrolled_at = sub.enrolled_at
+        months_enrolled = (now.year - enrolled_at.year) * 12 + (now.month - enrolled_at.month)
+        if now.day < enrolled_at.day:
+            months_enrolled -= 1
+        months_enrolled += 1 
+        if months_enrolled < 1: months_enrolled = 1
         
-    total_expected = months_enrolled * float(course.price)
+        total_expected = months_enrolled * float(sub.monthly_fee)
+        
+        total_paid_result = db.query(func.sum(Payment.amount)).filter(
+            Payment.ai_subscription_id == sub.student_id,
+            Payment.payment_status == 'PAID'
+        ).scalar()
+        total_paid = float(total_paid_result) if total_paid_result else 0.0
+        
+        current_balance = total_expected - total_paid
+        
+        if payment_data.amount > (current_balance + 0.01):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Payment amount (${payment_data.amount:.2f}) exceeds AI balance due (${current_balance:.2f})."
+            )
 
-    # 3. Calculate Total Paid
-    total_paid_result = db.query(func.sum(Payment.amount)).filter(
-        Payment.enrollment_id == enrollment.id,
-        Payment.payment_status == 'PAID'
-    ).scalar()
-    total_paid = float(total_paid_result) if total_paid_result else 0.0
+    # 2. Handle Regular Course Payment
+    elif payment_data.enrollment_id:
+        enrollment = db.query(Enrollment).filter(Enrollment.id == payment_data.enrollment_id).first()
+        if not enrollment:
+            raise HTTPException(status_code=404, detail="Enrollment not found")
 
-    # 4. Calculate Balance Due
-    current_balance = total_expected - total_paid
+        course = db.query(Course).filter(Course.id == enrollment.course_id).first()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course associated with enrollment not found")
 
-    # 5. Validate Payment Amount
-    # Use a small epsilon for float comparison safety
-    if payment_data.amount > (current_balance + 0.01):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Payment amount (${payment_data.amount:.2f}) exceeds current balance due (${current_balance:.2f})."
-        )
+        # Anniversary calculation (Keep existing logic)
+        enrollment_date = enrollment.enrollment_date
+        now = datetime.utcnow()
+        months_enrolled = (now.year - enrollment_date.year) * 12 + (now.month - enrollment_date.month)
+        if now.day < enrollment_date.day:
+            months_enrolled -= 1
+        months_enrolled += 1
+        if months_enrolled < 1: months_enrolled = 1
+            
+        total_expected = months_enrolled * float(course.price)
+
+        total_paid_result = db.query(func.sum(Payment.amount)).filter(
+            Payment.enrollment_id == enrollment.id,
+            Payment.payment_status == 'PAID'
+        ).scalar()
+        total_paid = float(total_paid_result) if total_paid_result else 0.0
+
+        current_balance = total_expected - total_paid
+
+        if payment_data.amount > (current_balance + 0.01):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Payment amount (${payment_data.amount:.2f}) exceeds current course balance due (${current_balance:.2f})."
+            )
+    else:
+        raise HTTPException(status_code=400, detail="Either enrollment_id or ai_subscription_id is required")
 
     new_payment = Payment(**payment_data.dict())
     if payment_data.payment_status == "PAID":

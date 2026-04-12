@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 from models.ai_advisor import ProficiencyLevel
 
 
@@ -13,6 +13,8 @@ class AiStatusResponse(BaseModel):
     has_access: bool
     history: Optional[list] = []
     native_language: Optional[str] = "Arabic"
+    monthly_fee: float = 0.00
+    enrolled_at: Optional[datetime] = None
 
 
 class ChatMessageRequest(BaseModel):
@@ -28,6 +30,7 @@ class ChatMessageResponse(BaseModel):
 class TeacherOrAdminSubscriptionRequest(BaseModel):
     level: ProficiencyLevel
     daily_minutes_limit: int
+    monthly_fee: float = 0.00
 
 class UpdateSettingsRequest(BaseModel):
     native_language: str
@@ -37,3 +40,16 @@ class TranslationRequest(BaseModel):
 
 class TranslationResponse(BaseModel):
     translation: str
+
+class AiSubscriptionAdminResponse(BaseModel):
+    student_id: str
+    student_name: Optional[str] = None
+    level: ProficiencyLevel
+    daily_minutes_limit: int
+    monthly_fee: float = 0.00
+    enrolled_at: Optional[datetime] = None
+    is_active: bool
+    minutes_used_today: float = 0.0
+    
+    class Config:
+        from_attributes = True

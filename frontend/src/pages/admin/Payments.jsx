@@ -59,16 +59,26 @@ const Payments = () => {
     queryFn: async () => (await api.get('/admin/users?role=STUDENT')).data
   });
 
+  const { data: aiSubscriptions = [], isLoading: aiLoading } = useQuery({
+    queryKey: ['admin-ai-subscriptions'],
+    queryFn: async () => (await api.get('/admin/ai-advisor/subscriptions')).data
+  });
+
   const { data: courses = [], isLoading: cLoading } = useQuery({
     queryKey: ['admin-courses'],
     queryFn: async () => (await api.get('/admin/courses')).data
   });
 
-  const isLoading = pLoading || eLoading || sLoading || cLoading;
+  const isLoading = pLoading || eLoading || sLoading || cLoading || aiLoading;
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: async (data) => (await api.post('/admin/payments', data)).data,
+    mutationFn: async (data) => {
+      const payload = { ...data };
+      if (!payload.ai_subscription_id) payload.ai_subscription_id = null;
+      if (!payload.enrollment_id) payload.enrollment_id = null;
+      return (await api.post('/admin/payments', payload)).data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin-payments']);
       toast.success('Payment recorded successfully!');
@@ -79,7 +89,7 @@ const Payments = () => {
   });
 
   const resetForm = () => {
-    setFormData({ enrollment_id: '', amount: '', payment_status: 'PENDING', notes: '' });
+    setFormData({ enrollment_id: '', ai_subscription_id: '', amount: '', payment_status: 'PENDING', notes: '' });
   };
 
   // --- Logic: Calculate Financials per Enrollment ---
@@ -130,6 +140,7 @@ const Payments = () => {
   const studentSummaries = useMemo(() => {
     const map = new Map();
     
+    // Process Course Enrollments
     enrollmentFinancials.forEach(item => {
       if (!map.has(item.student_id)) {
         map.set(item.student_id, {
@@ -138,20 +149,61 @@ const Payments = () => {
           totalCourses: 0,
           totalBalance: 0,
           status: 'GOOD',
-          enrollments: []
+          enrollments: [],
+          aiSubscription: null
         });
       }
       const summary = map.get(item.student_id);
       summary.totalCourses += 1;
       summary.totalBalance += item.balance;
-      summary.enrollments.push(item);
+      summary.enrollments.push({ ...item, type: 'COURSE' });
       
-      // If any course is overdue, mark student as overdue
       if (item.balance > 0) summary.status = 'OWING';
+    });
+
+    // Process AI Advisor Subscriptions
+    aiSubscriptions.forEach(sub => {
+      if (sub.is_active) {
+        if (!map.has(sub.student_id)) {
+          map.set(sub.student_id, {
+            student_id: sub.student_id,
+            studentName: sub.student_name || 'Unknown Student',
+            totalCourses: 0,
+            totalBalance: 0,
+            status: 'GOOD',
+            enrollments: [],
+            aiSubscription: null
+          });
+        }
+        
+        const summary = map.get(sub.student_id);
+        const monthsEnrolled = getMonthsEnrolled(sub.enrolled_at);
+        const totalExpected = monthsEnrolled * sub.monthly_fee;
+        const totalPaid = payments
+          .filter(p => p.ai_subscription_id === sub.student_id && p.payment_status === 'PAID')
+          .reduce((sum, p) => sum + p.amount, 0);
+        
+        const balance = totalExpected - totalPaid;
+        
+        summary.aiSubscription = {
+          id: sub.student_id,
+          name: "AI Advisor Monthly",
+          monthlyPrice: sub.monthly_fee,
+          enrolledAt: sub.enrolled_at,
+          monthsEnrolled,
+          totalExpected,
+          totalPaid,
+          balance: Math.max(0, balance),
+          type: 'AI'
+        };
+        
+        summary.totalBalance += summary.aiSubscription.balance;
+        if (summary.aiSubscription.balance > 0) summary.status = 'OWING';
+      }
     });
     
     return Array.from(map.values());
-  }, [enrollmentFinancials]);
+  }, [enrollmentFinancials, students, payments, aiSubscriptions]);
 
   // Apply filter + sort
   const displayedSummaries = useMemo(() => {
@@ -172,9 +224,25 @@ const Payments = () => {
     setShowDetailModal(true);
   };
 
-  const handleMakePayment = (enrollment) => {
-    setFormData(prev => ({ ...prev, enrollment_id: enrollment.id, payment_status: 'PAID', amount: '' }));
-    setMaxAmount(enrollment.balance);
+   const handleMakePayment = (item) => {
+    if (item.type === 'AI') {
+        setFormData(prev => ({ 
+            ...prev, 
+            ai_subscription_id: item.id, 
+            enrollment_id: '',
+            payment_status: 'PAID', 
+            amount: '' 
+        }));
+    } else {
+        setFormData(prev => ({ 
+            ...prev, 
+            enrollment_id: item.id, 
+            ai_subscription_id: '',
+            payment_status: 'PAID', 
+            amount: '' 
+        }));
+    }
+    setMaxAmount(item.balance);
     setIsPaymentModalOpen(true);
   };
 
@@ -364,6 +432,15 @@ const Payments = () => {
             {/* Content - Scrollable */}
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
               
+               {selectedStudentSummary.aiSubscription && (
+                <CoursePaymentCard 
+                  key="ai-sub" 
+                  enrollment={selectedStudentSummary.aiSubscription} 
+                  payments={payments} 
+                  onMakePayment={handleMakePayment} 
+                />
+              )}
+
               {selectedStudentSummary.enrollments.map((enr) => (
                 <CoursePaymentCard 
                   key={enr.id} 
@@ -405,9 +482,12 @@ const Payments = () => {
 const CoursePaymentCard = ({ enrollment, payments, onMakePayment }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Filter payments for this specific enrollment
+  // Filter payments for this specific enrollment or AI sub
   const coursePayments = payments
-    .filter(p => p.enrollment_id === enrollment.id)
+    .filter(p => {
+        if (enrollment.type === 'AI') return p.ai_subscription_id === enrollment.id;
+        return p.enrollment_id === enrollment.id;
+    })
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
@@ -423,14 +503,17 @@ const CoursePaymentCard = ({ enrollment, payments, onMakePayment }) => {
             {isExpanded ? '▼' : '▶'}
           </div>
           <div>
-            <h3 className="font-bold text-lg text-gray-900 dark:text-white">{enrollment.courseName}</h3>
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white">{enrollment.courseName || enrollment.name}</h3>
             {!isExpanded && (
               <p className="text-xs text-gray-500">
                  Monthly: ${enrollment.monthlyPrice}/mo • Balance: <span className={enrollment.balance > 0 ? 'text-red-500 font-bold' : 'text-green-500'}>${enrollment.balance.toFixed(2)}</span>
               </p>
             )}
             {isExpanded && (
-               <p className="text-xs text-gray-500">Enrolled: {enrollment.enrollmentDate.toLocaleDateString()}</p>
+               <p className="text-xs text-gray-500">
+                {enrollment.type === 'AI' ? 'Authorized: ' : 'Enrolled: '}
+                {new Date(enrollment.enrolledAt || enrollment.enrollmentDate).toLocaleDateString()}
+               </p>
             )}
           </div>
         </div>

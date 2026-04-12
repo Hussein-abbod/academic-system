@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
 from models.ai_advisor import AiSubscription
-from schemas.ai_advisor import TeacherOrAdminSubscriptionRequest, AiStatusResponse
+from schemas.ai_advisor import TeacherOrAdminSubscriptionRequest, AiStatusResponse, AiSubscriptionAdminResponse
 from auth.dependencies import require_admin
 
 
@@ -28,6 +28,7 @@ async def subscribe_student_to_ai(
         
     sub.level = request.level
     sub.daily_minutes_limit = request.daily_minutes_limit
+    sub.monthly_fee = request.monthly_fee
     sub.is_active = True
     
     db.commit()
@@ -39,7 +40,9 @@ async def subscribe_student_to_ai(
         daily_minutes_limit=sub.daily_minutes_limit,
         minutes_used_today=sub.minutes_used_today,
         time_remaining_seconds=max(0.0, (sub.daily_minutes_limit - sub.minutes_used_today) * 60),
-        has_access=True
+        has_access=True,
+        monthly_fee=float(sub.monthly_fee),
+        enrolled_at=sub.enrolled_at
     )
 
 @router.delete("/unsubscribe/{student_id}")
@@ -53,3 +56,31 @@ async def unsubscribe_student_from_ai(
         sub.is_active = False
         db.commit()
     return {"message": "Student AI access successfully revoked."}
+
+@router.get("/subscriptions", response_model=list[AiSubscriptionAdminResponse])
+async def list_ai_subscriptions(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """Get all AI Subscriptions for admin management."""
+    subscriptions = db.query(AiSubscription).all()
+    results = []
+    
+    for sub in subscriptions:
+        user = db.query(User).filter(User.id == sub.student_id).first()
+        student_name = user.full_name if user else "Unknown Student"
+        
+        results.append(
+            AiSubscriptionAdminResponse(
+                student_id=sub.student_id,
+                student_name=student_name,
+                level=sub.level,
+                daily_minutes_limit=sub.daily_minutes_limit,
+                monthly_fee=float(sub.monthly_fee),
+                enrolled_at=sub.enrolled_at,
+                is_active=sub.is_active,
+                minutes_used_today=sub.minutes_used_today
+            )
+        )
+        
+    return results

@@ -18,7 +18,8 @@ class Payment(Base):
     __tablename__ = "payments"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    enrollment_id = Column(String(36), ForeignKey("enrollments.id"), nullable=False)
+    enrollment_id = Column(String(36), ForeignKey("enrollments.id"), nullable=True)
+    ai_subscription_id = Column(String(36), ForeignKey("ai_subscriptions.student_id"), nullable=True)
     amount = Column(Numeric(10, 2), nullable=False)
     payment_status = Column(SQLEnum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False)
     payment_date = Column(DateTime, nullable=True)

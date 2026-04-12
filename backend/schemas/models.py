@@ -79,7 +79,8 @@ class EnrollmentResponse(BaseModel):
 
 class PaymentCreate(BaseModel):
     """Schema for creating a payment"""
-    enrollment_id: str
+    enrollment_id: Optional[str] = None
+    ai_subscription_id: Optional[str] = None
     amount: float
     payment_status: str = "PENDING"
     notes: Optional[str] = None
@@ -95,13 +96,15 @@ class PaymentUpdate(BaseModel):
 class PaymentResponse(BaseModel):
     """Schema for payment response"""
     id: str
-    enrollment_id: str
+    enrollment_id: Optional[str] = None
+    ai_subscription_id: Optional[str] = None
     amount: float
     payment_status: str
     payment_date: Optional[datetime] = None
     notes: Optional[str] = None
     created_at: datetime
     course_name: Optional[str] = None
+    is_ai_payment: bool = False
     
     class Config:
         from_attributes = True

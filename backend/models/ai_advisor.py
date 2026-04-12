@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Date, Boolean, ForeignKey, Enum as SQLEnum, Text, DateTime
+from sqlalchemy import Column, String, Integer, Float, Date, Boolean, ForeignKey, Enum as SQLEnum, Text, DateTime, Numeric
 from sqlalchemy.orm import relationship
 import enum
 from datetime import datetime
@@ -22,6 +22,8 @@ class AiSubscription(Base):
     last_used_date = Column(Date, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     native_language = Column(String(50), nullable=True, default="Arabic")
+    monthly_fee = Column(Numeric(10, 2), nullable=False, default=0.00)
+    enrolled_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationship to user
     student = relationship("User")

@@ -55,7 +55,17 @@ const Dashboard = () => {
       gradient: 'from-teal-500 to-emerald-600',
       bgLight: 'bg-teal-50 dark:bg-teal-900/20',
       iconColor: 'text-teal-600 dark:text-teal-400',
-      description: 'Courses finished',
+      description: 'Finished courses',
+    },
+    {
+      title: 'Balance Due',
+      value: `$${stats?.financials?.balance?.toFixed(2) || '0.00'}`,
+      icon: Award,
+      gradient: 'from-orange-500 to-pink-600',
+      bgLight: 'bg-orange-50 dark:bg-orange-900/20',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      description: 'Courses & AI fees',
+      highlight: true
     },
   ];
 
@@ -77,7 +87,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.title}

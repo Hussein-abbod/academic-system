@@ -71,7 +71,7 @@ const Login = () => {
               SpeakUP Academy
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Sign in to Management System
+              Sign in
             </p>
           </div>
 

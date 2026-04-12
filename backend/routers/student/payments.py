@@ -24,8 +24,8 @@ async def get_my_payments(
     
     payments = db.query(Payment).options(
         joinedload(Payment.enrollment).joinedload(Enrollment.course)
-    ).join(Enrollment).join(Course).filter(
-        Enrollment.student_id == current_user.id
+    ).outerjoin(Enrollment).filter(
+        (Enrollment.student_id == current_user.id) | (Payment.ai_subscription_id == current_user.id)
     ).order_by(Payment.payment_date.desc()).all()
     
     # Manually populate course_name since it's not a direct field on Payment model
@@ -34,6 +34,10 @@ async def get_my_payments(
         response = PaymentResponse.from_orm(payment)
         if payment.enrollment and payment.enrollment.course:
             response.course_name = payment.enrollment.course.name
+            response.is_ai_payment = False
+        elif payment.ai_subscription_id:
+            response.course_name = "AI Advisor Monthly"
+            response.is_ai_payment = True
         results.append(response)
             
     return results

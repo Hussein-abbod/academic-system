@@ -43,9 +43,21 @@ const MyPayments = () => {
         refetchOnMount: true,
     });
 
+    const { data: aiStatus, isLoading: isLoadingAi } = useQuery({
+        queryKey: ['student-ai-status'],
+        queryFn: async () => {
+            try {
+                const response = await api.get('/student/ai-advisor/status');
+                return response.data;
+            } catch (error) {
+                return null;
+            }
+        },
+    });
+
     // Build per-enrollment financial breakdown (mirrors admin Payments.jsx logic)
     const enrollmentFinancials = React.useMemo(() => {
-        return enrollments.map((enroll) => {
+        const list = enrollments.map((enroll) => {
             const monthsEnrolled = getMonthsEnrolled(enroll.enrollment_date);
             const monthlyPrice = Number(enroll.course_price) || 0;
             const totalExpected = monthsEnrolled * monthlyPrice;
@@ -68,7 +80,29 @@ const MyPayments = () => {
                 balance,
             };
         });
-    }, [enrollments, payments]);
+
+        if (aiStatus?.is_active && aiStatus.enrolled_at) {
+            const monthsEnrolled = getMonthsEnrolled(aiStatus.enrolled_at);
+            const monthlyPrice = aiStatus.monthly_fee;
+            const totalExpected = monthsEnrolled * monthlyPrice;
+            const totalPaid = payments
+                .filter(p => p.is_ai_payment && p.payment_status === 'PAID')
+                .reduce((sum, p) => sum + Number(p.amount), 0);
+            
+            list.push({
+                id: 'ai-subscription',
+                course_name: 'AI Advisor Monthly',
+                enrollment_date: aiStatus.enrolled_at,
+                monthsEnrolled,
+                monthlyPrice,
+                totalExpected,
+                totalPaid,
+                balance: Math.max(0, totalExpected - totalPaid)
+            });
+        }
+
+        return list;
+    }, [enrollments, payments, aiStatus]);
 
     // Top-level summary across all enrollments
     const summary = React.useMemo(() => {
@@ -124,7 +158,7 @@ const MyPayments = () => {
         },
     ];
 
-    if (isLoadingPayments || isLoadingEnrollments) {
+    if (isLoadingPayments || isLoadingEnrollments || isLoadingAi) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 animate-in fade-in duration-500">
                 <div className="relative flex items-center justify-center">

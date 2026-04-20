@@ -28,7 +28,7 @@ const Dashboard = () => {
         <div className="relative flex items-center justify-center">
           <div className="w-16 h-16 border-4 border-indigo-100 dark:border-indigo-900/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin"></div>
           <div className="absolute">
-            <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
         </div>
         <p className="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase animate-pulse">
@@ -166,60 +166,6 @@ const Dashboard = () => {
                 <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors" />
               </motion.a>
             </div>
-
-            {/* Motivational Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              className="mt-6 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800"
-            >
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-100/10">
-                  <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Keep Going!</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    You're making great progress. Stay consistent and you'll reach your goals!
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Recent Quizzes / Notifications */}
-             <div className="mt-6">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-yellow-500" />
-                    New Quizzes
-                </h3>
-                <div className="space-y-3">
-                    {stats?.recent_quizzes?.map((quiz) => (
-                        <div key={quiz.id} className="p-3 bg-white dark:bg-slate-700 rounded-lg shadow-sm border border-gray-100 dark:border-slate-600 flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-white text-sm">{quiz.title}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {new Date(quiz.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
-                            {quiz.link && (
-                                <a 
-                                    href={quiz.link} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-xs rounded-full hover:bg-purple-200 transition-colors"
-                                >
-                                    Start
-                                </a>
-                            )}
-                        </div>
-                    ))}
-                    {(!stats?.recent_quizzes || stats.recent_quizzes.length === 0) && (
-                        <p className="text-sm text-gray-500 italic">No new quizzes.</p>
-                    )}
-                </div>
-            </div>
-
           </Card>
         </motion.div>
       </div>

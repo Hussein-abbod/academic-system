@@ -16,6 +16,21 @@ Built to digitize every aspect of institute operations — from enrollment and b
 
 ---
 
+## 🚀 Live Demo
+
+**Link:** [https://academic-system-gold.vercel.app/login](https://academic-system-gold.vercel.app/login)
+
+> **⚠️ Note:** The backend is deployed on a free hosting tier. When you first attempt to login, it may take **1 to 2 minutes** for the server to wake up from inactivity. Please be patient!
+
+### Demo Accounts
+| Role | Email | Password |
+|---|---|---|
+| **Admin** | `admin@speakup.academy` | `admin123` |
+| **Student** | `husseinabbod@gmail.com` | `hussein123` |
+| **Teacher** | `aliahmed@gmail.com` | `ali123` |
+
+---
+
 ## 📖 Overview
 
 SpeakUP is a comprehensive Academic Management System designed for English language institutes. It provides a unified platform for administrators, teachers, and students — covering course management, attendance, payments, real-time analytics, and an integrated AI Language Tutor powered by Groq LLMs.

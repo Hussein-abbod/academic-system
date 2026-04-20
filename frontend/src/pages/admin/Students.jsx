@@ -347,7 +347,7 @@ const StudentForm = ({ formData, setFormData, onSubmit, onCancel, isLoading, isE
       required
       value={formData.full_name}
       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-      placeholder="e.g., John Doe"
+      placeholder="e.g., Hussein"
     />
 
     <Input

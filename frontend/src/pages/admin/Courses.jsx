@@ -384,7 +384,7 @@ const CourseForm = ({ formData, setFormData, teachers, onSubmit, onCancel, isLoa
       required
       value={formData.name}
       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-      placeholder="e.g., Introduction to Python"
+      placeholder="e.g., Basic grammar"
     />
 
     <TextArea

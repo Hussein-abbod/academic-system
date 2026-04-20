@@ -24,10 +24,10 @@ def init_database():
                 is_active=True
             )
             db.add(admin)
-            print("✓ Created default admin user (email: admin@speakup.academy, password: admin123)")
+            print("> Created default admin user (email: admin@speakup.academy, password: admin123)")
         
         db.commit()
-        print("\n✓ Database initialized successfully!")
+        print("\n> Database initialized successfully!")
         
     except Exception as e:
         print(f"Error initializing database: {e}")

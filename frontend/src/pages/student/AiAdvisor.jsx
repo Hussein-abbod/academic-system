@@ -15,6 +15,7 @@ const AiAdvisor = () => {
   const [selectedText, setSelectedText] = useState('');
   const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
   const [translations, setTranslations] = useState({}); // { messageIndex: translation }
+  const [selectedAccent, setSelectedAccent] = useState(() => localStorage.getItem('ai_accent') || 'en-US');
   
   const recognitionRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
@@ -244,13 +245,16 @@ const AiAdvisor = () => {
 
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Try to find a high-quality Neural English voice (Edge/Chrome)
+    // Find voice based on selected accent
     const voices = window.speechSynthesis.getVoices();
-    const neuralVoice = voices.find(v => v.name.includes('Neural') && v.lang.startsWith('en')) 
-                     || voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB');
+    const voice = voices.find(v => v.lang === selectedAccent && v.name.includes('Neural'))
+               || voices.find(v => v.lang === selectedAccent && v.name.includes('Google')) 
+               || voices.find(v => v.lang === selectedAccent)
+               || voices.find(v => v.lang.startsWith('en') && v.name.includes('Neural'))
+               || voices.find(v => v.lang.startsWith('en'));
                      
-    if (neuralVoice) {
-      utterance.voice = neuralVoice;
+    if (voice) {
+      utterance.voice = voice;
     }
 
     utterance.rate = 0.95; // Slightly slower for clear English practice
@@ -386,6 +390,25 @@ const AiAdvisor = () => {
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1 italic">Press Enter to save</p>
+             </div>
+
+             {/* Accent Selection */}
+             <div className="text-left mt-4 mb-4">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">AI Accent</label>
+                <select 
+                  value={selectedAccent}
+                  onChange={(e) => {
+                    setSelectedAccent(e.target.value);
+                    localStorage.setItem('ai_accent', e.target.value);
+                  }}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                >
+                  <option value="en-US">American English</option>
+                  <option value="en-GB">British English</option>
+                  <option value="en-AU">Australian English</option>
+                  <option value="en-IE">Irish English</option>
+                  <option value="en-IN">Indian English</option>
+                </select>
              </div>
 
              {!status.has_access ? (

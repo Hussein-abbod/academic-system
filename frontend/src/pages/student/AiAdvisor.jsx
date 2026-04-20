@@ -405,9 +405,6 @@ const AiAdvisor = () => {
                 >
                   <option value="en-US">American English</option>
                   <option value="en-GB">British English</option>
-                  <option value="en-AU">Australian English</option>
-                  <option value="en-IE">Irish English</option>
-                  <option value="en-IN">Indian English</option>
                 </select>
              </div>
 
